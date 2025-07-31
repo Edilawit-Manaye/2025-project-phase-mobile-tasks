@@ -1,11 +1,11 @@
-
 import 'package:flutter/material.dart';
-import '../product_model.dart';
+import '../../domain/entities/product.dart';
+import '../../domain/usecases/delete_product_usecase.dart';
+import 'home_page.dart'; // Import to access the shared FakeProductRepository
 
 class DetailPage extends StatefulWidget {
   final Product product;
   const DetailPage({super.key, required this.product});
-
   @override
   State<DetailPage> createState() => _DetailPageState();
 }
@@ -13,6 +13,15 @@ class DetailPage extends StatefulWidget {
 class _DetailPageState extends State<DetailPage> {
   int _selectedSize = 41;
   final sizes = [39, 40, 41, 42, 43, 44];
+
+  final repository = FakeProductRepository.instance;
+  late final DeleteProductUsecase deleteUsecase;
+
+  @override
+  void initState() {
+    super.initState();
+    deleteUsecase = DeleteProductUsecase(repository);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,8 +35,7 @@ class _DetailPageState extends State<DetailPage> {
               children: [
                 Image.asset(widget.product.imagePath, width: double.infinity, height: 350, fit: BoxFit.cover),
                 Positioned(
-                  top: 40,
-                  left: 15,
+                  top: 40, left: 15,
                   child: CircleAvatar(
                     backgroundColor: Colors.white,
                     child: IconButton(
@@ -51,7 +59,7 @@ class _DetailPageState extends State<DetailPage> {
                         children: [
                           const Icon(Icons.star, color: Colors.amber, size: 20),
                           const SizedBox(width: 5),
-                          Text('(${widget.product.rating})', style: const TextStyle(color: Colors.grey, fontSize: 16)),
+                          Text("(${widget.product.rating})", style: const TextStyle(color: Colors.grey, fontSize: 16)),
                         ],
                       ),
                     ],
@@ -61,11 +69,11 @@ class _DetailPageState extends State<DetailPage> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(widget.product.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 28)),
-                      Text('\$${widget.product.price.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 24)),
+                      Text("\$${widget.product.price.toStringAsFixed(2)}", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 24)),
                     ],
                   ),
                   const SizedBox(height: 24),
-                  const Text('Size:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+                  const Text("Size:", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
                   const SizedBox(height: 12),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -89,45 +97,28 @@ class _DetailPageState extends State<DetailPage> {
           ],
         ),
       ),
-      // ==========================================================
-      // === THIS IS THE FULLY CORRECTED BOTTOM NAVIGATION BAR    ===
-      // ==========================================================
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.all(20),
         child: Row(
           children: [
             Expanded(
               child: OutlinedButton(
-                onPressed: () {
+                onPressed: () async {
+                  await deleteUsecase(widget.product.id);
+                  if (context.mounted) Navigator.pop(context);
                 },
                 style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 15), foregroundColor: Colors.red, side: const BorderSide(color: Colors.red), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                child: const Text('DELETE', style: TextStyle(fontWeight: FontWeight.bold)),
+                child: const Text("DELETE", style: TextStyle(fontWeight: FontWeight.bold)),
               ),
             ),
             const SizedBox(width: 20),
             Expanded(
               child: ElevatedButton(
-                // This is the corrected solution
-                onPressed: () async {
-                  // Store the Navigator BEFORE the 'await'.
-                  final navigator = Navigator.of(context);
-
-                  // This is the 'async gap'. We use the stored navigator to push.
-                  final updatedProduct = await navigator.pushNamed(
-                    '/add-update',
-                    arguments: widget.product,
-                  );
-
-                  // Now, check if the widget is still on screen AFTER the 'await'.
-                  if (!context.mounted) return;
-
-                  // We use the stored navigator again to pop.
-                  if (updatedProduct != null && updatedProduct is Product) {
-                    navigator.pop(updatedProduct);
-                  }
+                onPressed: () {
+                  Navigator.pushNamed(context, '/add-update', arguments: widget.product);
                 },
                 style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 15), backgroundColor: const Color(0xFF4A4EFE), foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                child: const Text('UPDATE', style: TextStyle(fontWeight: FontWeight.bold)),
+                child: const Text("UPDATE", style: TextStyle(fontWeight: FontWeight.bold)),
               ),
             ),
           ],

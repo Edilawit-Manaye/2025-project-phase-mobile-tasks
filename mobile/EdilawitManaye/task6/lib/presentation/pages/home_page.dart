@@ -1,77 +1,129 @@
-
-
 import 'package:flutter/material.dart';
-import '../product_model.dart';
+import '../../domain/entities/product.dart';
+import '../../domain/repositories/product_repository.dart';
+import '../../domain/usecases/view_all_products_usecase.dart';
+
+// --- THIS IS THE CORRECTED, SHARED "SINGLETON" FAKE REPOSITORY ---
+class FakeProductRepository implements ProductRepository {
+  // 1. Create a private constructor
+  FakeProductRepository._();
+
+  // 2. Create a single, static, final instance of this class
+  static final FakeProductRepository instance = FakeProductRepository._();
+
+  // 3. The "database" list now belongs to this single instance
+  final List<Product> _products = [
+    Product(id: 1, imagePath: 'images/bestShoes.jpg', title: 'Derby Leather Shoes', category: 'Men\'s shoe', price: 120, rating: 4.0, description: "A derby leather shoe is a classic and versatile footwear option..."),
+    Product(id: 2, imagePath: 'images/bestShoes.jpg', title: 'Classic Ankle Boots', category: 'Women\'s shoe', price: 150, rating: 4.5, description: "Elegant and stylish ankle boots perfect for any occasion..."),
+  ];
+
+  @override
+  Future<List<Product>> getProducts() async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    return List.from(_products);
+  }
+
+  @override
+  Future<Product> getProductById(int id) async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    return _products.firstWhere((p) => p.id == id);
+  }
+
+  @override
+  Future<void> createProduct(Product product) async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    _products.add(product.copyWith(id: DateTime.now().millisecondsSinceEpoch));
+  }
+
+  @override
+  Future<void> updateProduct(Product product) async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    final index = _products.indexWhere((p) => p.id == product.id);
+    if (index != -1) {
+      _products[index] = product;
+    }
+  }
+
+  @override
+  Future<void> deleteProduct(int id) async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    _products.removeWhere((p) => p.id == id);
+  }
+}
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
-
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  // A sample list of products. In a real app, this would come from a database.
-  final List<Product> _products = [
-    Product(
-        id: 1,
-        imagePath: 'images/bestShoes.jpg',
-        title: 'Derby Leather Shoes',
-        category: 'Men\'s shoe',
-        price: 120,
-        rating: 4.0,
-        description: 'A derby leather shoe is a classic...'),
-    Product(
-        id: 2,
-        imagePath: 'images/bestShoes.jpg',
-        title: 'Classic Ankle Boots',
-        category: 'Women\'s shoe',
-        price: 150,
-        rating: 4.5,
-        description: 'Elegant and stylish ankle boots...'),
-  ];
+  late final ViewAllProductsUsecase viewAllProductsUsecase;
+  late Future<List<Product>> _productsFuture;
+
+  // Use the single, shared instance of the repository
+  final ProductRepository repository = FakeProductRepository.instance;
+
+  @override
+  void initState() {
+    super.initState();
+    viewAllProductsUsecase = ViewAllProductsUsecase(repository);
+    _loadProducts();
+  }
+
+  void _loadProducts() {
+    setState(() {
+      _productsFuture = viewAllProductsUsecase();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       body: SafeArea(
-        child: ListView.builder(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
-          itemCount: _products.length + 2, // item count for header and list
-          itemBuilder: (context, index) {
-            if (index == 0) return _buildHeader();
-            if (index == 1) return _buildTitleBar();
+        child: FutureBuilder<List<Product>>(
+          future: _productsFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            } else if (snapshot.hasError) {
+              return Center(child: Text('Error: ${snapshot.error}'));
+            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return const Center(child: Text('No products found.'));
+            }
 
-            final productIndex = index - 2;
-            final product = _products[productIndex];
-
-            return Padding(
-              padding: const EdgeInsets.only(top: 16.0),
-              child: GestureDetector(
-                onTap: () {
-                  // Navigate to detail page with product data
-                  Navigator.pushNamed(context, '/detail', arguments: product);
-                },
-                child: ProductCard(product: product),
-              ),
+            final products = snapshot.data!;
+            return ListView.builder(
+              padding: const EdgeInsets.all(16.0),
+              itemCount: products.length + 2,
+              itemBuilder: (context, index) {
+                if (index == 0) return _buildHeader();
+                if (index == 1) return _buildTitleBar();
+                final product = products[index - 2];
+                return Padding(
+                  padding: const EdgeInsets.only(top: 16.0),
+                  child: GestureDetector(
+                    onTap: () async {
+                      await Navigator.pushNamed(context, '/detail', arguments: product);
+                      _loadProducts(); // Refresh the list when returning
+                    },
+                    child: ProductCard(product: product),
+                  ),
+                );
+              },
             );
           },
         ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          // Navigate to add page and wait for a result
-          final result = await Navigator.pushNamed(context, '/add-update');
-          if (result != null && result is Product) {
-            setState(() {
-              _products.add(result);
-            });
-          }
+          await Navigator.pushNamed(context, '/add-update');
+          _loadProducts();
         },
         backgroundColor: const Color(0xFF4A4EFE),
         shape: const CircleBorder(),
-        child: const Icon(Icons.add, color: Colors.white, size: 32),
+        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }
@@ -118,7 +170,6 @@ class _HomePageState extends State<HomePage> {
           child: IconButton(
             icon: const Icon(Icons.search, color: Colors.black54),
             onPressed: () {
-              // Navigate to the Search Page
               Navigator.pushNamed(context, '/search');
             },
           ),
@@ -128,11 +179,9 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-// Reusable ProductCard - now takes a Product object
 class ProductCard extends StatelessWidget {
   final Product product;
   const ProductCard({super.key, required this.product});
-
   @override
   Widget build(BuildContext context) {
     return Card(
