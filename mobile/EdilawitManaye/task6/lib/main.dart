@@ -1,10 +1,10 @@
 
 import 'package:flutter/material.dart';
-import 'package:task6/add_update_page.dart';
-import 'package:task6/detail_page.dart';
-import 'package:task6/home_page.dart';
-import 'package:task6/product_model.dart';
-import 'package:task6/search_page.dart';
+import '../add_update_page.dart';
+import '../detail_page.dart';
+import '../home_page.dart';
+import '../product_model.dart';
+import '../search_page.dart';
 
 // 2. The main entry point of the entire application.
 void main() {

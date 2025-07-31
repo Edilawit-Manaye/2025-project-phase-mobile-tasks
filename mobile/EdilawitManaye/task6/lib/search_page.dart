@@ -1,7 +1,7 @@
 
 import 'package:flutter/material.dart';
-import 'package:task6/home_page.dart';
-import 'package:task6/product_model.dart';
+import '../home_page.dart';
+import '../product_model.dart';
 
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
@@ -16,13 +16,13 @@ class _SearchPageState extends State<SearchPage> {
   @override
   Widget build(BuildContext context) {
     // A sample product for demonstration
-    final sampleProduct = Product(id: 1, imagePath: 'images/bestShoes.jpg', title: 'Derby Leather Shoes', category: 'Men\'s shoe', price: 120, rating: 4.0, description: "A derby leather shoe is a classic...");
+    final sampleProduct = Product(id: 1, imagePath: 'images/bestShoes.jpg', title: 'Derby Leather Shoes', category: 'Men\'s shoe', price: 120, rating: 4.0, description: 'A derby leather shoe is a classic...');
 
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         leading: IconButton(icon: const Icon(Icons.arrow_back, color: Color(0xFF4A4EFE)), onPressed: () => Navigator.pop(context)),
-        title: const Text("Search Product", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
+        title: const Text('Search Product', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
         backgroundColor: Colors.white,
         elevation: 0,
       ),
@@ -33,7 +33,7 @@ class _SearchPageState extends State<SearchPage> {
             children: [
               Expanded(
                 child: TextFormField(
-                  initialValue: "Leather",
+                  initialValue: 'Leather',
                   decoration: InputDecoration(
                     suffixIcon: const Icon(Icons.arrow_forward, color: Color(0xFF4A4EFE)),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[300]!)),
@@ -77,13 +77,13 @@ class _SearchPageState extends State<SearchPage> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text("Category", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  const Text('Category', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                   const SizedBox(height: 8),
                   TextFormField(
                     decoration: InputDecoration(filled: true, fillColor: Colors.grey[200], border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none)),
                   ),
                   const SizedBox(height: 20),
-                  const Text("Price", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  const Text('Price', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                   RangeSlider(
                     values: _currentRangeValues,
                     min: 0, max: 200,
@@ -96,7 +96,7 @@ class _SearchPageState extends State<SearchPage> {
                   ElevatedButton(
                     onPressed: () => Navigator.pop(context),
                     style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF4A4EFE), foregroundColor: Colors.white, minimumSize: const Size(double.infinity, 50), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                    child: const Text("APPLY", style: TextStyle(fontWeight: FontWeight.bold)),
+                    child: const Text('APPLY', style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
                 ],
               ),

@@ -1,7 +1,7 @@
 
 
 import 'package:flutter/material.dart';
-import 'package:task6/product_model.dart';
+import '../product_model.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -20,7 +20,7 @@ class _HomePageState extends State<HomePage> {
         category: 'Men\'s shoe',
         price: 120,
         rating: 4.0,
-        description: "A derby leather shoe is a classic..."),
+        description: 'A derby leather shoe is a classic...'),
     Product(
         id: 2,
         imagePath: 'images/bestShoes.jpg',
@@ -28,7 +28,7 @@ class _HomePageState extends State<HomePage> {
         category: 'Women\'s shoe',
         price: 150,
         rating: 4.5,
-        description: "Elegant and stylish ankle boots..."),
+        description: 'Elegant and stylish ankle boots...'),
   ];
 
   @override

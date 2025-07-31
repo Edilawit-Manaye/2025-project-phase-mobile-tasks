@@ -1,6 +1,6 @@
 
 import 'package:flutter/material.dart';
-import 'package:task6/product_model.dart';
+import '../product_model.dart';
 
 class DetailPage extends StatefulWidget {
   final Product product;
@@ -51,7 +51,7 @@ class _DetailPageState extends State<DetailPage> {
                         children: [
                           const Icon(Icons.star, color: Colors.amber, size: 20),
                           const SizedBox(width: 5),
-                          Text("(${widget.product.rating})", style: const TextStyle(color: Colors.grey, fontSize: 16)),
+                          Text('(${widget.product.rating})', style: const TextStyle(color: Colors.grey, fontSize: 16)),
                         ],
                       ),
                     ],
@@ -61,11 +61,11 @@ class _DetailPageState extends State<DetailPage> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(widget.product.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 28)),
-                      Text("\$${widget.product.price.toStringAsFixed(2)}", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 24)),
+                      Text('\$${widget.product.price.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 24)),
                     ],
                   ),
                   const SizedBox(height: 24),
-                  const Text("Size:", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+                  const Text('Size:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
                   const SizedBox(height: 12),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -101,28 +101,33 @@ class _DetailPageState extends State<DetailPage> {
                 onPressed: () {
                 },
                 style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 15), foregroundColor: Colors.red, side: const BorderSide(color: Colors.red), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                child: const Text("DELETE", style: TextStyle(fontWeight: FontWeight.bold)),
+                child: const Text('DELETE', style: TextStyle(fontWeight: FontWeight.bold)),
               ),
             ),
             const SizedBox(width: 20),
             Expanded(
               child: ElevatedButton(
+                // This is the corrected solution
                 onPressed: () async {
-                  // Navigate to the edit page and wait for it to return the updated product.
-                  final updatedProduct = await Navigator.pushNamed(
-                    context,
+                  // Store the Navigator BEFORE the 'await'.
+                  final navigator = Navigator.of(context);
+
+                  // This is the 'async gap'. We use the stored navigator to push.
+                  final updatedProduct = await navigator.pushNamed(
                     '/add-update',
                     arguments: widget.product,
                   );
 
-                  // If the user saved their edits, `updatedProduct` will not be null.
-                  // We then pop this DetailPage and send the updated product back to the HomePage.
+                  // Now, check if the widget is still on screen AFTER the 'await'.
+                  if (!context.mounted) return;
+
+                  // We use the stored navigator again to pop.
                   if (updatedProduct != null && updatedProduct is Product) {
-                    Navigator.pop(context, updatedProduct);
+                    navigator.pop(updatedProduct);
                   }
                 },
                 style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 15), backgroundColor: const Color(0xFF4A4EFE), foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                child: const Text("UPDATE", style: TextStyle(fontWeight: FontWeight.bold)),
+                child: const Text('UPDATE', style: TextStyle(fontWeight: FontWeight.bold)),
               ),
             ),
           ],

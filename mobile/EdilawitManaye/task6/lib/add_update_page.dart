@@ -1,7 +1,7 @@
 
 
 import 'package:flutter/material.dart';
-import 'package:task6/product_model.dart';
+import '../product_model.dart';
 
 class AddUpdatePage extends StatefulWidget {
   final Product? product; // Can receive a product for editing
@@ -71,7 +71,7 @@ class _AddUpdatePageState extends State<AddUpdatePage> {
           ),
         ),
         centerTitle: true,
-        title: Text(isEditing ? "Edit Product" : "Add Product", style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
+        title: Text(isEditing ? 'Edit Product' : 'Add Product', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
         backgroundColor: Colors.white,
         elevation: 0,
       ),
@@ -86,28 +86,28 @@ class _AddUpdatePageState extends State<AddUpdatePage> {
               child: Container(
                 height: 200, width: double.infinity,
                 decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(12)),
-                child: Column(mainAxisAlignment: MainAxisAlignment.center, children: const [Icon(Icons.image_outlined, size: 50, color: Colors.black54), SizedBox(height: 12), Text("upload image", style: TextStyle(color: Colors.black54))]),
+                child:const Column(mainAxisAlignment: MainAxisAlignment.center, children:  [Icon(Icons.image_outlined, size: 50, color: Colors.black54), SizedBox(height: 12), Text('upload image', style: TextStyle(color: Colors.black54))]),
               ),
             ),
             const SizedBox(height: 24),
-            _buildTextField(label: "name", controller: _nameController),
+            _buildTextField(label: 'name', controller: _nameController),
             const SizedBox(height: 16),
-            _buildTextField(label: "category", controller: _categoryController),
+            _buildTextField(label: 'category', controller: _categoryController),
             const SizedBox(height: 16),
-            _buildTextField(label: "price", controller: _priceController, suffixIcon: const Icon(Icons.attach_money), keyboardType: TextInputType.number),
+            _buildTextField(label: 'price', controller: _priceController, suffixIcon: const Icon(Icons.attach_money), keyboardType: TextInputType.number),
             const SizedBox(height: 16),
-            _buildTextField(label: "description", controller: _descriptionController, maxLines: 4),
+            _buildTextField(label: 'description', controller: _descriptionController, maxLines: 4),
             const SizedBox(height: 30),
             ElevatedButton(
               onPressed: _onSave,
               style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF4A4EFE), foregroundColor: Colors.white, minimumSize: const Size(double.infinity, 50), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-              child: Text(isEditing ? "UPDATE" : "ADD", style: const TextStyle(fontWeight: FontWeight.bold)),
+              child: Text(isEditing ? 'UPDATE' : 'ADD', style: const TextStyle(fontWeight: FontWeight.bold)),
             ),
             const SizedBox(height: 12),
             if (isEditing) OutlinedButton(
               onPressed: () { /* Handle delete */ },
               style: OutlinedButton.styleFrom(foregroundColor: Colors.red, side: const BorderSide(color: Colors.red), minimumSize: const Size(double.infinity, 50), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-              child: const Text("DELETE", style: TextStyle(fontWeight: FontWeight.bold)),
+              child: const Text('DELETE', style: TextStyle(fontWeight: FontWeight.bold)),
             )
           ],
         ),
