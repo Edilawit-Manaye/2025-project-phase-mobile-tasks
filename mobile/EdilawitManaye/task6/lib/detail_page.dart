@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:task6/product_model.dart';
 
@@ -89,9 +88,6 @@ class _DetailPageState extends State<DetailPage> {
           ],
         ),
       ),
-      // ==========================================================
-      // === THIS IS THE FULLY CORRECTED BOTTOM NAVIGATION BAR    ===
-      // ==========================================================
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.all(20),
         child: Row(
@@ -99,6 +95,11 @@ class _DetailPageState extends State<DetailPage> {
             Expanded(
               child: OutlinedButton(
                 onPressed: () {
+                  // Pop and send a "delete" message back to HomePage
+                  Navigator.pop(context, {
+                    'action': 'delete',
+                    'id': widget.product.id,
+                  });
                 },
                 style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 15), foregroundColor: Colors.red, side: const BorderSide(color: Colors.red), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
                 child: const Text("DELETE", style: TextStyle(fontWeight: FontWeight.bold)),
@@ -108,17 +109,16 @@ class _DetailPageState extends State<DetailPage> {
             Expanded(
               child: ElevatedButton(
                 onPressed: () async {
-                  // Navigate to the edit page and wait for it to return the updated product.
+                  // Go to the edit page and wait for the updated product
                   final updatedProduct = await Navigator.pushNamed(
                     context,
                     '/add-update',
                     arguments: widget.product,
                   );
 
-                  // If the user saved their edits, `updatedProduct` will not be null.
-                  // We then pop this DetailPage and send the updated product back to the HomePage.
+                  // If we got an updated product, pop again to send it back to HomePage
                   if (updatedProduct != null && updatedProduct is Product) {
-                    Navigator.pop(context, updatedProduct);
+                    if (context.mounted) Navigator.pop(context, updatedProduct);
                   }
                 },
                 style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 15), backgroundColor: const Color(0xFF4A4EFE), foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),

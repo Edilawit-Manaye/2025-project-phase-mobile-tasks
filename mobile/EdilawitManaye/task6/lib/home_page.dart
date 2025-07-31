@@ -1,5 +1,3 @@
-
-
 import 'package:flutter/material.dart';
 import 'package:task6/product_model.dart';
 
@@ -11,7 +9,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  // A sample list of products. In a real app, this would come from a database.
+  // A sample list of products. This list will now be modified by our actions.
   final List<Product> _products = [
     Product(
         id: 1,
@@ -38,7 +36,7 @@ class _HomePageState extends State<HomePage> {
       body: SafeArea(
         child: ListView.builder(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
-          itemCount: _products.length + 2, // item count for header and list
+          itemCount: _products.length + 2,
           itemBuilder: (context, index) {
             if (index == 0) return _buildHeader();
             if (index == 1) return _buildTitleBar();
@@ -49,9 +47,30 @@ class _HomePageState extends State<HomePage> {
             return Padding(
               padding: const EdgeInsets.only(top: 16.0),
               child: GestureDetector(
-                onTap: () {
-                  // Navigate to detail page with product data
-                  Navigator.pushNamed(context, '/detail', arguments: product);
+                onTap: () async {
+                  // Make the function async to wait for a result from DetailPage
+                  final result = await Navigator.pushNamed(
+                    context,
+                    '/detail',
+                    arguments: product,
+                  );
+
+                  // Handle the DELETE result from DetailPage
+                  if (result != null && result is Map && result['action'] == 'delete') {
+                    setState(() {
+                      _products.removeWhere((p) => p.id == result['id']);
+                    });
+                  }
+
+                  // Handle the UPDATE result from DetailPage
+                  if (result != null && result is Product) {
+                    setState(() {
+                      final index = _products.indexWhere((p) => p.id == result.id);
+                      if (index != -1) {
+                        _products[index] = result;
+                      }
+                    });
+                  }
                 },
                 child: ProductCard(product: product),
               ),
@@ -118,7 +137,6 @@ class _HomePageState extends State<HomePage> {
           child: IconButton(
             icon: const Icon(Icons.search, color: Colors.black54),
             onPressed: () {
-              // Navigate to the Search Page
               Navigator.pushNamed(context, '/search');
             },
           ),
@@ -128,7 +146,6 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-// Reusable ProductCard - now takes a Product object
 class ProductCard extends StatelessWidget {
   final Product product;
   const ProductCard({super.key, required this.product});

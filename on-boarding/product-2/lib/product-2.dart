@@ -39,7 +39,7 @@ class ProductManager {
 
   void viewSingleProduct(int index) {
     if (index < 0 || index >= _products.length) {
-      print("No product found at index $index");
+      print("No product.dart found at index $index");
       return;
     }
     print(_products[index].toString());
@@ -78,7 +78,7 @@ void main() {
 
   productManager.editProduct(1, 'Smartphone', 'Updated smartphone description', 649.99);
 
-  print('\nViewing product at index 1:');
+  print('\nViewing product.dart at index 1:');
   productManager.viewSingleProduct(1);
 
   productManager.deleteProduct(0);
