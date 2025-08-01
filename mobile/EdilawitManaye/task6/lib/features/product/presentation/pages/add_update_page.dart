@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import '../../data/repositories/product_repository_impl.dart';
-import '../../domain/entities/product.dart';
+import '../../domain/entities/product_entity.dart';
 import '../../domain/repositories/product_repository.dart';
 import '../../domain/usecases/create_product_usecase.dart';
 import '../../domain/usecases/update_product_usecase.dart';
 import '../../domain/usecases/delete_product_usecase.dart';
 
 class AddUpdatePage extends StatefulWidget {
-  final Product? product;
+  final ProductEntity? product;
   const AddUpdatePage({super.key, this.product});
   @override
   State<AddUpdatePage> createState() => _AddUpdatePageState();
@@ -44,7 +44,7 @@ class _AddUpdatePageState extends State<AddUpdatePage> {
   }
 
   void _onSave() async {
-    final productToSave = Product(
+    final productToSave = ProductEntity(
       id: isEditing ? widget.product!.id : 0,
       title: _nameController.text,
       description: _descriptionController.text,

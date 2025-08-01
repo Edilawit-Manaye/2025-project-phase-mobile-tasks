@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../data/repositories/product_repository_impl.dart';
-import '../../domain/entities/product.dart';
+import '../../domain/entities/product_entity.dart';
 import '../../domain/usecases/delete_product_usecase.dart';
 
 class DetailPage extends StatefulWidget {
-  final Product product;
+  final ProductEntity product;
   const DetailPage({super.key, required this.product});
   @override
   State<DetailPage> createState() => _DetailPageState();

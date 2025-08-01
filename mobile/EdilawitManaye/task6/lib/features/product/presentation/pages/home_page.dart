@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../data/repositories/product_repository_impl.dart';
-import '../../domain/entities/product.dart';
+import '../../domain/entities/product_entity.dart';
 import '../../domain/repositories/product_repository.dart';
 import '../../domain/usecases/view_all_products_usecase.dart';
 
@@ -12,7 +12,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   late final ViewAllProductsUsecase viewAllProductsUsecase;
-  late Future<List<Product>> _productsFuture;
+  late Future<List<ProductEntity>> _productsFuture;
 
   // Use the single, shared instance of the REAL repository
   final ProductRepository repository = ProductRepositoryImpl.instance;
@@ -35,7 +35,7 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       body: SafeArea(
-        child: FutureBuilder<List<Product>>(
+        child: FutureBuilder<List<ProductEntity>>(
           future: _productsFuture,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
@@ -133,7 +133,7 @@ class _HomePageState extends State<HomePage> {
 }
 
 class ProductCard extends StatelessWidget {
-  final Product product;
+  final ProductEntity product;
   const ProductCard({super.key, required this.product});
   @override
   Widget build(BuildContext context) {

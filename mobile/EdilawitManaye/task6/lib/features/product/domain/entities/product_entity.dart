@@ -1,4 +1,7 @@
-class Product {
+import 'package:equatable/equatable.dart';
+
+// The class now extends Equatable to enable value-based comparison.
+class ProductEntity extends Equatable {
   final int id;
   final String title;
   final String description;
@@ -7,7 +10,8 @@ class Product {
   final double price;
   final double rating;
 
-  Product({
+  // The constructor is now 'const' for better performance.
+  const ProductEntity({
     required this.id,
     required this.title,
     required this.description,
@@ -17,12 +21,12 @@ class Product {
     required this.rating,
   });
 
-  // Helper method for updating
-  Product copyWith({
+  // The copyWith method is correctly included for easy updates.
+  ProductEntity copyWith({
     int? id, String? title, String? description, String? imagePath,
     String? category, double? price, double? rating,
   }) {
-    return Product(
+    return ProductEntity(
       id: id ?? this.id,
       title: title ?? this.title,
       description: description ?? this.description,
@@ -32,4 +36,9 @@ class Product {
       rating: rating ?? this.rating,
     );
   }
+
+  // This is the required override from Equatable to fix the test.
+  // It tells Dart which properties to use for comparison.
+  @override
+  List<Object?> get props => [id, title, description, imagePath, category, price, rating];
 }
