@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../data/repositories/product_repository_impl.dart';
 import '../../domain/entities/product.dart';
 import '../../domain/usecases/delete_product_usecase.dart';
-import 'home_page.dart'; // Import to access the shared FakeProductRepository
 
 class DetailPage extends StatefulWidget {
   final Product product;
@@ -14,7 +14,7 @@ class _DetailPageState extends State<DetailPage> {
   int _selectedSize = 41;
   final sizes = [39, 40, 41, 42, 43, 44];
 
-  final repository = FakeProductRepository.instance;
+  final repository = ProductRepositoryImpl.instance;
   late final DeleteProductUsecase deleteUsecase;
 
   @override

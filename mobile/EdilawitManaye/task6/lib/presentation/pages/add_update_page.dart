@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import '../../data/repositories/product_repository_impl.dart';
 import '../../domain/entities/product.dart';
 import '../../domain/repositories/product_repository.dart';
 import '../../domain/usecases/create_product_usecase.dart';
 import '../../domain/usecases/update_product_usecase.dart';
 import '../../domain/usecases/delete_product_usecase.dart';
-import 'home_page.dart'; // Import to access the shared FakeProductRepository
 
 class AddUpdatePage extends StatefulWidget {
   final Product? product;
@@ -21,8 +21,7 @@ class _AddUpdatePageState extends State<AddUpdatePage> {
 
   bool get isEditing => widget.product != null;
 
-  // Use the single, shared instance of the repository
-  final ProductRepository repository = FakeProductRepository.instance;
+  final ProductRepository repository = ProductRepositoryImpl.instance;
 
   @override
   void initState() {

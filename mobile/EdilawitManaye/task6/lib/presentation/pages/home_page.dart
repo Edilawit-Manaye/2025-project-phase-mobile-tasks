@@ -1,55 +1,8 @@
 import 'package:flutter/material.dart';
+import '../../data/repositories/product_repository_impl.dart';
 import '../../domain/entities/product.dart';
 import '../../domain/repositories/product_repository.dart';
 import '../../domain/usecases/view_all_products_usecase.dart';
-
-// --- THIS IS THE CORRECTED, SHARED "SINGLETON" FAKE REPOSITORY ---
-class FakeProductRepository implements ProductRepository {
-  // 1. Create a private constructor
-  FakeProductRepository._();
-
-  // 2. Create a single, static, final instance of this class
-  static final FakeProductRepository instance = FakeProductRepository._();
-
-  // 3. The "database" list now belongs to this single instance
-  final List<Product> _products = [
-    Product(id: 1, imagePath: 'images/bestShoes.jpg', title: 'Derby Leather Shoes', category: 'Men\'s shoe', price: 120, rating: 4.0, description: "A derby leather shoe is a classic and versatile footwear option..."),
-    Product(id: 2, imagePath: 'images/bestShoes.jpg', title: 'Classic Ankle Boots', category: 'Women\'s shoe', price: 150, rating: 4.5, description: "Elegant and stylish ankle boots perfect for any occasion..."),
-  ];
-
-  @override
-  Future<List<Product>> getProducts() async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    return List.from(_products);
-  }
-
-  @override
-  Future<Product> getProductById(int id) async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    return _products.firstWhere((p) => p.id == id);
-  }
-
-  @override
-  Future<void> createProduct(Product product) async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    _products.add(product.copyWith(id: DateTime.now().millisecondsSinceEpoch));
-  }
-
-  @override
-  Future<void> updateProduct(Product product) async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    final index = _products.indexWhere((p) => p.id == product.id);
-    if (index != -1) {
-      _products[index] = product;
-    }
-  }
-
-  @override
-  Future<void> deleteProduct(int id) async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    _products.removeWhere((p) => p.id == id);
-  }
-}
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -61,8 +14,8 @@ class _HomePageState extends State<HomePage> {
   late final ViewAllProductsUsecase viewAllProductsUsecase;
   late Future<List<Product>> _productsFuture;
 
-  // Use the single, shared instance of the repository
-  final ProductRepository repository = FakeProductRepository.instance;
+  // Use the single, shared instance of the REAL repository
+  final ProductRepository repository = ProductRepositoryImpl.instance;
 
   @override
   void initState() {
@@ -106,7 +59,7 @@ class _HomePageState extends State<HomePage> {
                   child: GestureDetector(
                     onTap: () async {
                       await Navigator.pushNamed(context, '/detail', arguments: product);
-                      _loadProducts(); // Refresh the list when returning
+                      _loadProducts();
                     },
                     child: ProductCard(product: product),
                   ),
@@ -133,7 +86,7 @@ class _HomePageState extends State<HomePage> {
       padding: const EdgeInsets.only(bottom: 24.0),
       child: Row(
         children: [
-          Container(width: 50, height: 50, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(12))),
+          Container(width: 50, height: 50, decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(12))),
           const SizedBox(width: 12),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
