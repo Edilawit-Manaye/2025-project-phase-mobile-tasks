@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../../../core/network/network_info_impl.dart';
+import '../../data/datasources/product_local_data_source_impl.dart';
+import '../../data/datasources/product_remote_data_source_impl.dart';
 import '../../data/repositories/product_repository_impl.dart';
 import '../../domain/entities/product_entity.dart';
 import '../../domain/usecases/delete_product_usecase.dart';
@@ -14,12 +17,16 @@ class _DetailPageState extends State<DetailPage> {
   int _selectedSize = 41;
   final sizes = [39, 40, 41, 42, 43, 44];
 
-  final repository = ProductRepositoryImpl.instance;
   late final DeleteProductUsecase deleteUsecase;
 
   @override
   void initState() {
     super.initState();
+    final repository = ProductRepositoryImpl(
+      remoteDataSource: ProductRemoteDataSourceImpl.instance, // Use the shared instance
+      localDataSource: ProductLocalDataSourceImpl(),
+      networkInfo: NetworkInfoImpl(),
+    );
     deleteUsecase = DeleteProductUsecase(repository);
   }
 

@@ -1,7 +1,7 @@
 import '../../domain/entities/product_entity.dart';
 
 class ProductModel extends ProductEntity {
-  ProductModel({
+  const ProductModel({
     required super.id,
     required super.title,
     required super.description,
@@ -11,7 +11,7 @@ class ProductModel extends ProductEntity {
     required super.rating,
   });
 
-  // Factory constructor to create a ProductModel from a JSON map
+  // A factory constructor to create a ProductModel from a JSON map (for data coming from an API)
   factory ProductModel.fromJson(Map<String, dynamic> json) {
     return ProductModel(
       id: json['id'],
@@ -24,7 +24,20 @@ class ProductModel extends ProductEntity {
     );
   }
 
-  // Method to convert a ProductModel instance to a JSON map
+  // A factory constructor to create a ProductModel from a ProductEntity (for data going to the data layer)
+  factory ProductModel.fromEntity(ProductEntity entity) {
+    return ProductModel(
+      id: entity.id,
+      title: entity.title,
+      description: entity.description,
+      imagePath: entity.imagePath,
+      category: entity.category,
+      price: entity.price,
+      rating: entity.rating,
+    );
+  }
+
+  // Method to convert a ProductModel instance to a JSON map (for sending data to an API)
   Map<String, dynamic> toJson() {
     return {
       'id': id,

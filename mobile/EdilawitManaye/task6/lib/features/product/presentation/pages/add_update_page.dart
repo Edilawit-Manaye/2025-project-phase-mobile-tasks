@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../../../core/network/network_info_impl.dart';
+import '../../data/datasources/product_local_data_source_impl.dart';
+import '../../data/datasources/product_remote_data_source_impl.dart';
 import '../../data/repositories/product_repository_impl.dart';
 import '../../domain/entities/product_entity.dart';
 import '../../domain/repositories/product_repository.dart';
@@ -21,11 +24,23 @@ class _AddUpdatePageState extends State<AddUpdatePage> {
 
   bool get isEditing => widget.product != null;
 
-  final ProductRepository repository = ProductRepositoryImpl.instance;
+  late final ProductRepository repository;
+  late final CreateProductUsecase createUsecase;
+  late final UpdateProductUsecase updateUsecase;
+  late final DeleteProductUsecase deleteUsecase;
 
   @override
   void initState() {
     super.initState();
+    repository = ProductRepositoryImpl(
+      remoteDataSource: ProductRemoteDataSourceImpl.instance, // Use the shared instance
+      localDataSource: ProductLocalDataSourceImpl(),
+      networkInfo: NetworkInfoImpl(),
+    );
+    createUsecase = CreateProductUsecase(repository);
+    updateUsecase = UpdateProductUsecase(repository);
+    deleteUsecase = DeleteProductUsecase(repository);
+
     if (isEditing) {
       _nameController.text = widget.product!.title;
       _descriptionController.text = widget.product!.description;
@@ -55,11 +70,9 @@ class _AddUpdatePageState extends State<AddUpdatePage> {
     );
 
     if (isEditing) {
-      final usecase = UpdateProductUsecase(repository);
-      await usecase(productToSave);
+      await updateUsecase(productToSave);
     } else {
-      final usecase = CreateProductUsecase(repository);
-      await usecase(productToSave);
+      await createUsecase(productToSave);
     }
 
     if (context.mounted) Navigator.pop(context);
@@ -116,7 +129,6 @@ class _AddUpdatePageState extends State<AddUpdatePage> {
               const SizedBox(height: 12),
               OutlinedButton(
                 onPressed: () async {
-                  final deleteUsecase = DeleteProductUsecase(repository);
                   await deleteUsecase(widget.product!.id);
                   if (context.mounted) Navigator.popUntil(context, (route) => route.isFirst);
                 },

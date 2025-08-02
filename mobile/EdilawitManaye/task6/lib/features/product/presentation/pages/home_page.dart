@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import '../../../../core/error/failures.dart';
+import '../../../../core/network/network_info_impl.dart';
+import '../../../../core/usecases/usecase.dart';
+import '../../data/datasources/product_local_data_source_impl.dart';
+import '../../data/datasources/product_remote_data_source_impl.dart';
 import '../../data/repositories/product_repository_impl.dart';
 import '../../domain/entities/product_entity.dart';
 import '../../domain/repositories/product_repository.dart';
@@ -12,21 +17,25 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   late final ViewAllProductsUsecase viewAllProductsUsecase;
-  late Future<List<ProductEntity>> _productsFuture;
-
-  // Use the single, shared instance of the REAL repository
-  final ProductRepository repository = ProductRepositoryImpl.instance;
+  late Future<(Failure?, List<ProductEntity>)> _productsFuture;
+  late final ProductRepository repository;
 
   @override
   void initState() {
     super.initState();
+    repository = ProductRepositoryImpl(
+      // Use the SINGLE, SHARED INSTANCE of the remote data source
+      remoteDataSource: ProductRemoteDataSourceImpl.instance,
+      localDataSource: ProductLocalDataSourceImpl(),
+      networkInfo: NetworkInfoImpl(),
+    );
     viewAllProductsUsecase = ViewAllProductsUsecase(repository);
     _loadProducts();
   }
 
   void _loadProducts() {
     setState(() {
-      _productsFuture = viewAllProductsUsecase();
+      _productsFuture = viewAllProductsUsecase(NoParams());
     });
   }
 
@@ -35,18 +44,21 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       body: SafeArea(
-        child: FutureBuilder<List<ProductEntity>>(
+        child: FutureBuilder<(Failure?, List<ProductEntity>)>(
           future: _productsFuture,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
-            } else if (snapshot.hasError) {
-              return Center(child: Text('Error: ${snapshot.error}'));
-            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            } else if (snapshot.hasError || snapshot.data == null || snapshot.data!.$1 != null) {
+              final failure = snapshot.data?.$1;
+              return Center(child: Text('Error: ${snapshot.error ?? failure}'));
+            }
+
+            final products = snapshot.data!.$2;
+            if (products.isEmpty) {
               return const Center(child: Text('No products found.'));
             }
 
-            final products = snapshot.data!;
             return ListView.builder(
               padding: const EdgeInsets.all(16.0),
               itemCount: products.length + 2,
@@ -59,7 +71,7 @@ class _HomePageState extends State<HomePage> {
                   child: GestureDetector(
                     onTap: () async {
                       await Navigator.pushNamed(context, '/detail', arguments: product);
-                      _loadProducts();
+                      _loadProducts(); // Refresh after returning from detail page
                     },
                     child: ProductCard(product: product),
                   ),
@@ -72,7 +84,7 @@ class _HomePageState extends State<HomePage> {
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           await Navigator.pushNamed(context, '/add-update');
-          _loadProducts();
+          _loadProducts(); // Refresh after returning from add page
         },
         backgroundColor: const Color(0xFF4A4EFE),
         shape: const CircleBorder(),
