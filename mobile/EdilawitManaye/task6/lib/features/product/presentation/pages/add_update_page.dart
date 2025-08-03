@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:internet_connection_checker/internet_connection_checker.dart';
 import '../../../../core/network/network_info_impl.dart';
 import '../../data/datasources/product_local_data_source_impl.dart';
 import '../../data/datasources/product_remote_data_source_impl.dart';
@@ -33,9 +34,10 @@ class _AddUpdatePageState extends State<AddUpdatePage> {
   void initState() {
     super.initState();
     repository = ProductRepositoryImpl(
-      remoteDataSource: ProductRemoteDataSourceImpl.instance, // Use the shared instance
+      remoteDataSource: ProductRemoteDataSourceImpl.instance,
       localDataSource: ProductLocalDataSourceImpl(),
-      networkInfo: NetworkInfoImpl(),
+      // CORRECT
+      networkInfo: NetworkInfoImpl(InternetConnectionChecker.createInstance()),
     );
     createUsecase = CreateProductUsecase(repository);
     updateUsecase = UpdateProductUsecase(repository);
@@ -129,7 +131,6 @@ class _AddUpdatePageState extends State<AddUpdatePage> {
               const SizedBox(height: 12),
               OutlinedButton(
                 onPressed: () async {
-                  // CORRECT
                   await deleteUsecase(DeleteProductParams(widget.product!.id));
                   if (context.mounted) Navigator.popUntil(context, (route) => route.isFirst);
                 },

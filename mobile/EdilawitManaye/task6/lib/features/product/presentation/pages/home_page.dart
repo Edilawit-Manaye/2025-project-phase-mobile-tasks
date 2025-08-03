@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:internet_connection_checker/internet_connection_checker.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../core/network/network_info_impl.dart';
 import '../../../../core/usecases/usecase.dart';
@@ -18,18 +19,21 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   late final ViewAllProductsUsecase viewAllProductsUsecase;
   late Future<(Failure?, List<ProductEntity>)> _productsFuture;
+
   late final ProductRepository repository;
 
   @override
   void initState() {
     super.initState();
+    // This setup builds the full dependency chain with the REAL NetworkInfoImpl.
     repository = ProductRepositoryImpl(
-      // Use the SINGLE, SHARED INSTANCE of the remote data source
       remoteDataSource: ProductRemoteDataSourceImpl.instance,
       localDataSource: ProductLocalDataSourceImpl(),
-      networkInfo: NetworkInfoImpl(),
+      // CORRECT
+      networkInfo: NetworkInfoImpl(InternetConnectionChecker.createInstance()),
     );
     viewAllProductsUsecase = ViewAllProductsUsecase(repository);
+
     _loadProducts();
   }
 
@@ -71,7 +75,7 @@ class _HomePageState extends State<HomePage> {
                   child: GestureDetector(
                     onTap: () async {
                       await Navigator.pushNamed(context, '/detail', arguments: product);
-                      _loadProducts(); // Refresh after returning from detail page
+                      _loadProducts();
                     },
                     child: ProductCard(product: product),
                   ),
@@ -84,7 +88,7 @@ class _HomePageState extends State<HomePage> {
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           await Navigator.pushNamed(context, '/add-update');
-          _loadProducts(); // Refresh after returning from add page
+          _loadProducts();
         },
         backgroundColor: const Color(0xFF4A4EFE),
         shape: const CircleBorder(),
