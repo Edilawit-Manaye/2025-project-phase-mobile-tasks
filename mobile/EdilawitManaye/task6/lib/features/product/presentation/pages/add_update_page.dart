@@ -129,7 +129,8 @@ class _AddUpdatePageState extends State<AddUpdatePage> {
               const SizedBox(height: 12),
               OutlinedButton(
                 onPressed: () async {
-                  await deleteUsecase(widget.product!.id);
+                  // CORRECT
+                  await deleteUsecase(DeleteProductParams(widget.product!.id));
                   if (context.mounted) Navigator.popUntil(context, (route) => route.isFirst);
                 },
                 style: OutlinedButton.styleFrom(foregroundColor: Colors.red, side: const BorderSide(color: Colors.red), minimumSize: const Size(double.infinity, 50), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),

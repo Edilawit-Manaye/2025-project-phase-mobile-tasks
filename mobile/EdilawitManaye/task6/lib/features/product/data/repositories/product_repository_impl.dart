@@ -1,4 +1,5 @@
-// These are the necessary imports to connect all the layers and contracts.
+import '../../../../core/error/exceptions.dart';
+import '../../../../core/error/failures.dart';
 import '../../../../core/network/network_info.dart';
 import '../../domain/entities/product_entity.dart';
 import '../../domain/repositories/product_repository.dart';
@@ -6,15 +7,11 @@ import '../datasources/product_local_data_source.dart';
 import '../datasources/product_remote_data_source.dart';
 import '../models/product_model.dart';
 
-// This class implements the repository contract from the Domain layer.
-// Its job is to manage data sources.
 class ProductRepositoryImpl implements ProductRepository {
-  // It requires dependencies for remote, local, and network info.
   final ProductRemoteDataSource remoteDataSource;
   final ProductLocalDataSource localDataSource;
   final NetworkInfo networkInfo;
 
-  // The constructor uses dependency injection to receive the required parts.
   ProductRepositoryImpl({
     required this.remoteDataSource,
     required this.localDataSource,
@@ -22,44 +19,82 @@ class ProductRepositoryImpl implements ProductRepository {
   });
 
   @override
-  Future<List<ProductEntity>> getProducts() async {
-    // In a real app, you would use the networkInfo like this:
-    // if (await networkInfo.isConnected) { ... }
-    // For this task, we assume we are always online and fetch from remote.
-
-    final productModels = await remoteDataSource.getProducts();
-
-    // The repository is responsible for converting the Data-layer Models
-    // into Domain-layer Entities before returning them to the use case.
-    // In our case, since ProductModel extends ProductEntity, they are already compatible.
-    return productModels;
+  Future<(Failure?, List<ProductEntity>)> getProducts() async {
+    if (await networkInfo.isConnected) {
+      try {
+        final remoteProducts = await remoteDataSource.getProducts();
+        await localDataSource.cacheProducts(remoteProducts);
+        return (null, remoteProducts);
+      } on ServerException {
+        // Corrected: Explicitly type the empty list
+        return (ServerFailure(), <ProductEntity>[]);
+      }
+    } else {
+      try {
+        final localProducts = await localDataSource.getLastProducts();
+        return (null, localProducts);
+      } on CacheException {
+        // Corrected: Explicitly type the empty list
+        return (CacheFailure(), <ProductEntity>[]);
+      }
+    }
   }
 
   @override
-  Future<void> createProduct(ProductEntity product) async {
-    // Convert the Domain-layer Entity into a Data-layer Model before sending it
-    // to the remote data source.
-    final productModel = ProductModel.fromEntity(product);
-    await remoteDataSource.createProduct(productModel);
+  Future<(Failure?, void)> createProduct(ProductEntity product) async {
+    if (await networkInfo.isConnected) {
+      try {
+        final productModel = ProductModel.fromEntity(product);
+        await remoteDataSource.createProduct(productModel);
+        return (null, null);
+      } on ServerException {
+        return (ServerFailure(), null);
+      }
+    } else {
+      return (ServerFailure(), null);
+    }
   }
 
   @override
-  Future<void> deleteProduct(int id) async {
-    // Pass the request directly to the remote data source.
-    await remoteDataSource.deleteProduct(id);
+  Future<(Failure?, void)> deleteProduct(int id) async {
+    if (await networkInfo.isConnected) {
+      try {
+        await remoteDataSource.deleteProduct(id);
+        return (null, null);
+      } on ServerException {
+        return (ServerFailure(), null);
+      }
+    } else {
+      return (ServerFailure(), null);
+    }
   }
 
   @override
-  Future<ProductEntity> getProductById(int id) async {
-    // Get the model from the data source and return it as an entity.
-    final productModel = await remoteDataSource.getProductById(id);
-    return productModel;
+  Future<(Failure?, ProductEntity?)> getProductById(int id) async {
+    if (await networkInfo.isConnected) {
+      try {
+        final product = await remoteDataSource.getProductById(id);
+        return (null, product);
+      } on ServerException {
+        return (ServerFailure(), null);
+      }
+    } else {
+      return (ServerFailure(), null);
+    }
   }
 
   @override
-  Future<void> updateProduct(ProductEntity product) async {
-    // Convert the entity to a model before sending it to the data source.
-    final productModel = ProductModel.fromEntity(product);
-    await remoteDataSource.updateProduct(productModel);
+  Future<(Failure?, void)> updateProduct(ProductEntity product) async {
+    if (await networkInfo.isConnected) {
+      try {
+        final productModel = ProductModel.fromEntity(product);
+        await remoteDataSource.updateProduct(productModel);
+        return (null, null);
+      } on ServerException {
+        return (ServerFailure(), null);
+      }
+    } else {
+      return (ServerFailure(), null);
+    }
   }
 }

@@ -111,7 +111,8 @@ class _DetailPageState extends State<DetailPage> {
             Expanded(
               child: OutlinedButton(
                 onPressed: () async {
-                  await deleteUsecase(widget.product.id);
+                  // CORRECT
+                  await deleteUsecase(DeleteProductParams(widget.product.id));
                   if (context.mounted) Navigator.pop(context);
                 },
                 style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 15), foregroundColor: Colors.red, side: const BorderSide(color: Colors.red), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),

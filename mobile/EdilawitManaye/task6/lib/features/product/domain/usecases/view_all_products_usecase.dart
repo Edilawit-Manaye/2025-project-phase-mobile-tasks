@@ -3,16 +3,15 @@ import '../../../../core/usecases/usecase.dart';
 import '../entities/product_entity.dart';
 import '../repositories/product_repository.dart';
 
-// Now it implements the generic UseCase
+// This use case now correctly implements the generic UseCase with the Failure type.
 class ViewAllProductsUsecase implements UseCase<List<ProductEntity>, NoParams> {
   final ProductRepository repository;
 
   ViewAllProductsUsecase(this.repository);
 
-  // The call method now correctly accepts a 'params' argument
+  // The return type now matches the repository's contract.
   @override
   Future<(Failure?, List<ProductEntity>)> call(NoParams params) async {
-    final products = await repository.getProducts();
-    return (null, products);
+    return await repository.getProducts();
   }
 }

@@ -1,10 +1,20 @@
+import '../../../../core/error/failures.dart';
+import '../../../../core/usecases/usecase.dart';
 import '../repositories/product_repository.dart';
 
-class DeleteProductUsecase {
+// Note: We create a specific Params class for this use case as well.
+class DeleteProductParams {
+  final int id;
+  DeleteProductParams(this.id);
+}
+
+class DeleteProductUsecase implements UseCase<void, DeleteProductParams> {
   final ProductRepository repository;
+
   DeleteProductUsecase(this.repository);
 
-  Future<void> call(int id) async {
-    return await repository.deleteProduct(id);
+  @override
+  Future<(Failure?, void)> call(DeleteProductParams params) async {
+    return await repository.deleteProduct(params.id);
   }
 }

@@ -1,11 +1,21 @@
+import '../../../../core/error/failures.dart';
+import '../../../../core/usecases/usecase.dart';
 import '../entities/product_entity.dart';
 import '../repositories/product_repository.dart';
 
-class ViewProductUsecase {
+// Note: We create a specific Params class for this use case for clarity.
+class ViewProductParams {
+  final int id;
+  ViewProductParams(this.id);
+}
+
+class ViewProductUsecase implements UseCase<ProductEntity?, ViewProductParams> {
   final ProductRepository repository;
+
   ViewProductUsecase(this.repository);
 
-  Future<ProductEntity> call(int id) async {
-    return await repository.getProductById(id);
+  @override
+  Future<(Failure?, ProductEntity?)> call(ViewProductParams params) async {
+    return await repository.getProductById(params.id);
   }
 }
