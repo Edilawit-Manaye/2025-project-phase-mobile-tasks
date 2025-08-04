@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
+import 'features/product/domain/entities/product_entity.dart';
 import 'features/product/presentation/pages/add_update_page.dart';
 import 'features/product/presentation/pages/detail_page.dart';
 import 'features/product/presentation/pages/home_page.dart';
-import 'features/product/domain/entities/product_entity.dart';
 import 'features/product/presentation/pages/search_page.dart';
+import 'service_locator.dart'; // <-- Import the new file
 
-void main() => runApp(const MyApp());
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  setupLocator(); // <-- Call this setup function before the app runs
+  runApp(const MyApp());
+}
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});

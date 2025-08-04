@@ -1,15 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:internet_connection_checker/internet_connection_checker.dart';
 import '../../../../core/error/failures.dart';
-import '../../../../core/network/network_info_impl.dart';
 import '../../../../core/usecases/usecase.dart';
-import '../../data/datasources/product_local_data_source_impl.dart';
-import '../../data/datasources/product_remote_data_source_impl.dart';
-import '../../data/repositories/product_repository_impl.dart';
+import '../../../../service_locator.dart';
 import '../../domain/entities/product_entity.dart';
-import '../../domain/repositories/product_repository.dart';
 import '../../domain/usecases/view_all_products_usecase.dart';
-import 'package:http/http.dart' as http;
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -18,26 +12,17 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  late final ViewAllProductsUsecase viewAllProductsUsecase;
+  // Get the use case directly from the service locator.
+  final viewAllProductsUsecase = sl<ViewAllProductsUsecase>();
   late Future<(Failure?, List<ProductEntity>)> _productsFuture;
-
-  late final ProductRepository repository;
 
   @override
   void initState() {
     super.initState();
-    // This setup builds the full dependency chain with the REAL NetworkInfoImpl.
-    repository = ProductRepositoryImpl(
-      remoteDataSource: ProductRemoteDataSourceImpl(client: http.Client()),
-      localDataSource: ProductLocalDataSourceImpl(),
-      // CORRECT
-      networkInfo: NetworkInfoImpl(InternetConnectionChecker.createInstance()),
-    );
-    viewAllProductsUsecase = ViewAllProductsUsecase(repository);
-
     _loadProducts();
   }
 
+  // This method can be called to refresh the list of products.
   void _loadProducts() {
     setState(() {
       _productsFuture = viewAllProductsUsecase(NoParams());
@@ -76,7 +61,7 @@ class _HomePageState extends State<HomePage> {
                   child: GestureDetector(
                     onTap: () async {
                       await Navigator.pushNamed(context, '/detail', arguments: product);
-                      _loadProducts();
+                      _loadProducts(); // Refresh the list when returning from the detail page
                     },
                     child: ProductCard(product: product),
                   ),
@@ -89,7 +74,7 @@ class _HomePageState extends State<HomePage> {
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           await Navigator.pushNamed(context, '/add-update');
-          _loadProducts();
+          _loadProducts(); // Refresh the list after potentially adding a new product
         },
         backgroundColor: const Color(0xFF4A4EFE),
         shape: const CircleBorder(),

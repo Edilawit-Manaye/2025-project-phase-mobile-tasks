@@ -1,15 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:internet_connection_checker/internet_connection_checker.dart';
-import '../../../../core/network/network_info_impl.dart';
-import '../../data/datasources/product_local_data_source_impl.dart';
-import '../../data/datasources/product_remote_data_source_impl.dart';
-import '../../data/repositories/product_repository_impl.dart';
+import '../../../../service_locator.dart';
 import '../../domain/entities/product_entity.dart';
-import '../../domain/repositories/product_repository.dart';
 import '../../domain/usecases/create_product_usecase.dart';
 import '../../domain/usecases/update_product_usecase.dart';
 import '../../domain/usecases/delete_product_usecase.dart';
-import 'package:http/http.dart' as http;
 
 class AddUpdatePage extends StatefulWidget {
   final ProductEntity? product;
@@ -26,24 +20,14 @@ class _AddUpdatePageState extends State<AddUpdatePage> {
 
   bool get isEditing => widget.product != null;
 
-  late final ProductRepository repository;
-  late final CreateProductUsecase createUsecase;
-  late final UpdateProductUsecase updateUsecase;
-  late final DeleteProductUsecase deleteUsecase;
+  // Get all the use cases directly from the service locator.
+  final createUsecase = sl<CreateProductUsecase>();
+  final updateUsecase = sl<UpdateProductUsecase>();
+  final deleteUsecase = sl<DeleteProductUsecase>();
 
   @override
   void initState() {
     super.initState();
-    repository = ProductRepositoryImpl(
-      remoteDataSource: ProductRemoteDataSourceImpl(client: http.Client()),
-      localDataSource: ProductLocalDataSourceImpl(),
-      // CORRECT
-      networkInfo: NetworkInfoImpl(InternetConnectionChecker.createInstance()),
-    );
-    createUsecase = CreateProductUsecase(repository);
-    updateUsecase = UpdateProductUsecase(repository);
-    deleteUsecase = DeleteProductUsecase(repository);
-
     if (isEditing) {
       _nameController.text = widget.product!.title;
       _descriptionController.text = widget.product!.description;

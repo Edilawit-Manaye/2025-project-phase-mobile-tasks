@@ -8,18 +8,25 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+
   cupertino_icons: ^1.0.6
   equatable: ^2.0.5
-  internet_connection_checker: ^3.0.1
-  shared_preferences: ^2.5.3
-  http: ^1.4.0
+  internet_connection_checker: ^1.0.0+1
+  http: ^1.1.0
+  get_it: ^7.6.7
+
+  # THIS IS THE MISSING PACKAGE
+  shared_preferences: ^2.2.2
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+
   flutter_lints: ^2.0.3
 
 flutter:
   uses-material-design: true
+
+  # It's better to include the whole folder
   assets:
-    - images/bestShoes.jpg
+    - images/
