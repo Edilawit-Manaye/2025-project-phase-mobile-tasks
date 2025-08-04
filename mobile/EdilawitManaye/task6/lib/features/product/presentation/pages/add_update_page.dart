@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../../../service_locator.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/product_entity.dart';
-import '../../domain/usecases/create_product_usecase.dart';
-import '../../domain/usecases/update_product_usecase.dart';
-import '../../domain/usecases/delete_product_usecase.dart';
+import '../bloc/product_bloc.dart';
+import '../bloc/product_event.dart';
 
 class AddUpdatePage extends StatefulWidget {
   final ProductEntity? product;
@@ -17,13 +16,7 @@ class _AddUpdatePageState extends State<AddUpdatePage> {
   final _descriptionController = TextEditingController();
   final _categoryController = TextEditingController();
   final _priceController = TextEditingController();
-
   bool get isEditing => widget.product != null;
-
-  // Get all the use cases directly from the service locator.
-  final createUsecase = sl<CreateProductUsecase>();
-  final updateUsecase = sl<UpdateProductUsecase>();
-  final deleteUsecase = sl<DeleteProductUsecase>();
 
   @override
   void initState() {
@@ -45,7 +38,7 @@ class _AddUpdatePageState extends State<AddUpdatePage> {
     super.dispose();
   }
 
-  void _onSave() async {
+  void _onSave() {
     final productToSave = ProductEntity(
       id: isEditing ? widget.product!.id : 0,
       title: _nameController.text,
@@ -57,12 +50,13 @@ class _AddUpdatePageState extends State<AddUpdatePage> {
     );
 
     if (isEditing) {
-      await updateUsecase(productToSave);
+      // Dispatch the update event to the BLoC
+      context.read<ProductBloc>().add(UpdateProductEvent(productToSave));
     } else {
-      await createUsecase(productToSave);
+      // Dispatch the create event to the BLoC
+      context.read<ProductBloc>().add(CreateProductEvent(productToSave));
     }
-
-    if (context.mounted) Navigator.pop(context);
+    Navigator.pop(context);
   }
 
   @override
@@ -115,9 +109,10 @@ class _AddUpdatePageState extends State<AddUpdatePage> {
             if (isEditing) ...[
               const SizedBox(height: 12),
               OutlinedButton(
-                onPressed: () async {
-                  await deleteUsecase(DeleteProductParams(widget.product!.id));
-                  if (context.mounted) Navigator.popUntil(context, (route) => route.isFirst);
+                onPressed: () {
+                  // Dispatch the delete event
+                  context.read<ProductBloc>().add(DeleteProductEvent(widget.product!.id));
+                  Navigator.popUntil(context, (route) => route.isFirst);
                 },
                 style: OutlinedButton.styleFrom(foregroundColor: Colors.red, side: const BorderSide(color: Colors.red), minimumSize: const Size(double.infinity, 50), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
                 child: const Text("DELETE", style: TextStyle(fontWeight: FontWeight.bold)),

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../../../core/error/failures.dart';
-import '../../../../core/usecases/usecase.dart';
-import '../../../../service_locator.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/product_entity.dart';
-import '../../domain/usecases/view_all_products_usecase.dart';
+import '../bloc/product_bloc.dart';
+import '../bloc/product_event.dart';
+import '../bloc/product_state.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -12,21 +12,11 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  // Get the use case directly from the service locator.
-  final viewAllProductsUsecase = sl<ViewAllProductsUsecase>();
-  late Future<(Failure?, List<ProductEntity>)> _productsFuture;
-
   @override
   void initState() {
     super.initState();
-    _loadProducts();
-  }
-
-  // This method can be called to refresh the list of products.
-  void _loadProducts() {
-    setState(() {
-      _productsFuture = viewAllProductsUsecase(NoParams());
-    });
+    // Dispatch the initial event to load all products when the page is first built.
+    context.read<ProductBloc>().add(LoadAllProductEvent());
   }
 
   @override
@@ -34,47 +24,62 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       body: SafeArea(
-        child: FutureBuilder<(Failure?, List<ProductEntity>)>(
-          future: _productsFuture,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            } else if (snapshot.hasError || snapshot.data == null || snapshot.data!.$1 != null) {
-              final failure = snapshot.data?.$1;
-              return Center(child: Text('Error: ${snapshot.error ?? failure}'));
+        // BlocListener handles one-time actions like showing SnackBars or navigating
+        // in response to a state change, without rebuilding the UI.
+        child: BlocListener<ProductBloc, ProductState>(
+          listener: (context, state) {
+            // If any operation (Create, Update, Delete) was successful,
+            // we dispatch a new event to reload the product list.
+            if (state is OperationSuccessState) {
+              context.read<ProductBloc>().add(LoadAllProductEvent());
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(state.message), backgroundColor: Colors.green),
+              );
+            } else if (state is ErrorState) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(state.message), backgroundColor: Colors.red),
+              );
             }
-
-            final products = snapshot.data!.$2;
-            if (products.isEmpty) {
-              return const Center(child: Text('No products found.'));
-            }
-
-            return ListView.builder(
-              padding: const EdgeInsets.all(16.0),
-              itemCount: products.length + 2,
-              itemBuilder: (context, index) {
-                if (index == 0) return _buildHeader();
-                if (index == 1) return _buildTitleBar();
-                final product = products[index - 2];
-                return Padding(
-                  padding: const EdgeInsets.only(top: 16.0),
-                  child: GestureDetector(
-                    onTap: () async {
-                      await Navigator.pushNamed(context, '/detail', arguments: product);
-                      _loadProducts(); // Refresh the list when returning from the detail page
-                    },
-                    child: ProductCard(product: product),
-                  ),
-                );
-              },
-            );
           },
+          // BlocBuilder rebuilds the UI whenever a new state is emitted.
+          child: BlocBuilder<ProductBloc, ProductState>(
+            builder: (context, state) {
+              if (state is LoadingState) {
+                return const Center(child: CircularProgressIndicator());
+
+              }
+              if (state is LoadedAllProductState) {
+                if (state.products.isEmpty) {
+                  return const Center(child: Text('No products found. Add one!'));
+                }
+                return ListView.builder(
+                  padding: const EdgeInsets.all(16.0),
+                  itemCount: state.products.length + 2,
+                  itemBuilder: (context, index) {
+                    if (index == 0) return _buildHeader();
+                    if (index == 1) return _buildTitleBar();
+                    final product = state.products[index - 2];
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 16.0),
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.pushNamed(context, '/detail', arguments: product);
+                        },
+                        child: ProductCard(product: product),
+                      ),
+                    );
+                  },
+                );
+              }
+              // This covers the InitialState and any other unhandled states.
+              return const Center(child: Text('Welcome!'));
+            },
+          ),
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          await Navigator.pushNamed(context, '/add-update');
-          _loadProducts(); // Refresh the list after potentially adding a new product
+        onPressed: () {
+          Navigator.pushNamed(context, '/add-update');
         },
         backgroundColor: const Color(0xFF4A4EFE),
         shape: const CircleBorder(),

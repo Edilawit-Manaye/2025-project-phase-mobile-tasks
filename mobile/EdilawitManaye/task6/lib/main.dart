@@ -1,15 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'features/product/domain/entities/product_entity.dart';
+import 'features/product/presentation/bloc/product_bloc.dart';
 import 'features/product/presentation/pages/add_update_page.dart';
 import 'features/product/presentation/pages/detail_page.dart';
 import 'features/product/presentation/pages/home_page.dart';
 import 'features/product/presentation/pages/search_page.dart';
-import 'service_locator.dart'; // <-- Import the new file
+import 'service_locator.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  setupLocator(); // <-- Call this setup function before the app runs
-  runApp(const MyApp());
+  setupLocator(); // Set up our dependencies
+  runApp(
+    // Provide the ProductBloc to the entire widget tree
+    BlocProvider(
+      create: (context) => sl<ProductBloc>(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -17,7 +25,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter E-commerce App',
+      title: 'Flutter E-commerce BLoC App',
       initialRoute: '/',
       onGenerateRoute: (settings) {
         switch (settings.name) {
