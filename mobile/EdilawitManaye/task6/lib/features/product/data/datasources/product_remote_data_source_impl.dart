@@ -1,54 +1,85 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import '../../../../core/error/exceptions.dart';
 import '../models/product_model.dart';
 import 'product_remote_data_source.dart';
-import '../../domain/entities/product_entity.dart';
-import '../mappers/product_mapper.dart';
 
+// This is the REAL implementation that talks to the internet API.
 class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
-  // --- SINGLETON PATTERN ---
-  // A private constructor prevents direct instantiation from other files.
-  ProductRemoteDataSourceImpl._();
-  // The single, static, final instance of this class.
-  static final ProductRemoteDataSourceImpl instance = ProductRemoteDataSourceImpl._();
-  // --- END SINGLETON PATTERN ---
+  final http.Client client;
+  final String _baseUrl = 'https://g5-flutter-learning-path-be.onrender.com/api/v1';
 
-  // This list acts as our shared in-memory "database".
-  final List<ProductModel> _products = [
-    ProductModel(id: 1, imagePath: 'images/bestShoes.jpg', title: 'Derby Leather Shoes', category: 'Men\'s shoe', price: 120, rating: 4.0, description: "A derby leather shoe is a classic..."),
-    ProductModel(id: 2, imagePath: 'images/bestShoes.jpg', title: 'Classic Ankle Boots', category: 'Women\'s shoe', price: 150, rating: 4.5, description: "Elegant and stylish ankle boots..."),
-  ];
+  ProductRemoteDataSourceImpl({required this.client});
 
   @override
   Future<List<ProductModel>> getProducts() async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    return List.from(_products);
+    final response = await client.get(
+      Uri.parse('$_baseUrl/products'),
+      headers: {'Content-Type': 'application/json'},
+    );
+
+    if (response.statusCode == 200) {
+      final responseBody = json.decode(response.body);
+      // The API wraps the list in a 'data' key.
+      final List<dynamic> jsonList = responseBody['data'];
+      return jsonList.map((json) => ProductModel.fromJson(json)).toList();
+    } else {
+      throw ServerException();
+    }
   }
 
   @override
   Future<ProductModel> getProductById(int id) async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    return _products.firstWhere((p) => p.id == id);
+    final response = await client.get(
+      Uri.parse('$_baseUrl/products/$id'),
+      headers: {'Content-Type': 'application/json'},
+    );
+
+    if (response.statusCode == 200) {
+      return ProductModel.fromJson(json.decode(response.body)['data']);
+    } else {
+      throw ServerException();
+    }
   }
 
   @override
   Future<void> createProduct(ProductModel product) async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    final entity = ProductMapper.toEntity(product);
-    final newEntity = entity.copyWith(id: DateTime.now().millisecondsSinceEpoch);
-    _products.add(ProductMapper.fromEntity(newEntity));
+    final response = await client.post(
+      Uri.parse('$_baseUrl/products'),
+      headers: {'Content-Type': 'application/json'},
+      // We send the product data as a JSON string in the body.
+      body: json.encode(product.toJson()),
+    );
+
+    // A successful creation returns a 201 status code.
+    if (response.statusCode != 201) {
+      throw ServerException();
+    }
   }
 
   @override
   Future<void> updateProduct(ProductModel product) async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    final index = _products.indexWhere((p) => p.id == product.id);
-    if (index != -1) {
-      _products[index] = product;
+    final response = await client.put(
+      Uri.parse('$_baseUrl/products/${product.id}'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode(product.toJson()),
+    );
+
+    if (response.statusCode != 200) {
+      throw ServerException();
     }
   }
 
   @override
   Future<void> deleteProduct(int id) async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    _products.removeWhere((p) => p.id == id);
+    final response = await client.delete(
+      Uri.parse('$_baseUrl/products/$id'),
+      headers: {'Content-Type': 'application/json'},
+    );
+
+    // A successful deletion often returns a 204 (No Content) status code.
+    if (response.statusCode != 204 && response.statusCode != 200) {
+      throw ServerException();
+    }
   }
 }

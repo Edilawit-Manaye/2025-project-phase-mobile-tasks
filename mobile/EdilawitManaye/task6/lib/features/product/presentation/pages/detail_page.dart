@@ -6,6 +6,7 @@ import '../../data/datasources/product_remote_data_source_impl.dart';
 import '../../data/repositories/product_repository_impl.dart';
 import '../../domain/entities/product_entity.dart';
 import '../../domain/usecases/delete_product_usecase.dart';
+import 'package:http/http.dart' as http;
 
 class DetailPage extends StatefulWidget {
   final ProductEntity product;
@@ -24,7 +25,7 @@ class _DetailPageState extends State<DetailPage> {
   void initState() {
     super.initState();
     final repository = ProductRepositoryImpl(
-      remoteDataSource: ProductRemoteDataSourceImpl.instance,
+      remoteDataSource: ProductRemoteDataSourceImpl(client: http.Client()),
       localDataSource: ProductLocalDataSourceImpl(),
       // CORRECT
       networkInfo: NetworkInfoImpl(InternetConnectionChecker.createInstance()),

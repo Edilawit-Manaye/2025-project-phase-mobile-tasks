@@ -9,6 +9,7 @@ import '../../data/repositories/product_repository_impl.dart';
 import '../../domain/entities/product_entity.dart';
 import '../../domain/repositories/product_repository.dart';
 import '../../domain/usecases/view_all_products_usecase.dart';
+import 'package:http/http.dart' as http;
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -27,7 +28,7 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     // This setup builds the full dependency chain with the REAL NetworkInfoImpl.
     repository = ProductRepositoryImpl(
-      remoteDataSource: ProductRemoteDataSourceImpl.instance,
+      remoteDataSource: ProductRemoteDataSourceImpl(client: http.Client()),
       localDataSource: ProductLocalDataSourceImpl(),
       // CORRECT
       networkInfo: NetworkInfoImpl(InternetConnectionChecker.createInstance()),

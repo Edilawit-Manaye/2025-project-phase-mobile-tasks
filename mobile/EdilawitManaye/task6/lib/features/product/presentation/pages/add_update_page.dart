@@ -9,6 +9,7 @@ import '../../domain/repositories/product_repository.dart';
 import '../../domain/usecases/create_product_usecase.dart';
 import '../../domain/usecases/update_product_usecase.dart';
 import '../../domain/usecases/delete_product_usecase.dart';
+import 'package:http/http.dart' as http;
 
 class AddUpdatePage extends StatefulWidget {
   final ProductEntity? product;
@@ -34,7 +35,7 @@ class _AddUpdatePageState extends State<AddUpdatePage> {
   void initState() {
     super.initState();
     repository = ProductRepositoryImpl(
-      remoteDataSource: ProductRemoteDataSourceImpl.instance,
+      remoteDataSource: ProductRemoteDataSourceImpl(client: http.Client()),
       localDataSource: ProductLocalDataSourceImpl(),
       // CORRECT
       networkInfo: NetworkInfoImpl(InternetConnectionChecker.createInstance()),
