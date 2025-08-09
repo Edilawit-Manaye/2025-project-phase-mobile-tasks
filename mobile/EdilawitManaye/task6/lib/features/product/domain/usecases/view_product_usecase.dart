@@ -5,7 +5,7 @@ import '../repositories/product_repository.dart';
 
 // Note: We create a specific Params class for this use case for clarity.
 class ViewProductParams {
-  final int id;
+  final String id;
   ViewProductParams(this.id);
 }
 

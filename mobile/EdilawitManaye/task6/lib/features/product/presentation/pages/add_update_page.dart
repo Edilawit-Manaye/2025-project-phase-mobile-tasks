@@ -16,15 +16,17 @@ class _AddUpdatePageState extends State<AddUpdatePage> {
   final _descriptionController = TextEditingController();
   final _categoryController = TextEditingController();
   final _priceController = TextEditingController();
+
   bool get isEditing => widget.product != null;
 
   @override
   void initState() {
     super.initState();
     if (isEditing) {
-      _nameController.text = widget.product!.title;
+      _nameController.text = widget.product!.name;
       _descriptionController.text = widget.product!.description;
-      _categoryController.text = widget.product!.category;
+      // Handle the case where the category might be null
+      _categoryController.text = widget.product!.category ?? '';
       _priceController.text = widget.product!.price.toString();
     }
   }
@@ -39,21 +41,27 @@ class _AddUpdatePageState extends State<AddUpdatePage> {
   }
 
   void _onSave() {
+    if (_nameController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Product name cannot be empty.'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
     final productToSave = ProductEntity(
-      id: isEditing ? widget.product!.id : 0,
-      title: _nameController.text,
+      // The ID is now a String
+      id: isEditing ? widget.product!.id : '', // Let the backend create the ID
+      name: _nameController.text,
       description: _descriptionController.text,
-      category: _categoryController.text,
+      category: _categoryController.text.isNotEmpty ? _categoryController.text : null,
       price: double.tryParse(_priceController.text) ?? 0.0,
-      imagePath: isEditing ? widget.product!.imagePath : 'images/bestShoes.jpg',
-      rating: isEditing ? widget.product!.rating : 0.0,
+      imageUrl: isEditing ? widget.product!.imageUrl : 'https://i.imgur.com/example.png', // Placeholder
+      rating: isEditing ? widget.product!.rating : null,
     );
 
     if (isEditing) {
-      // Dispatch the update event to the BLoC
       context.read<ProductBloc>().add(UpdateProductEvent(productToSave));
     } else {
-      // Dispatch the create event to the BLoC
       context.read<ProductBloc>().add(CreateProductEvent(productToSave));
     }
     Navigator.pop(context);
@@ -85,7 +93,7 @@ class _AddUpdatePageState extends State<AddUpdatePage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             GestureDetector(
-              onTap: () {},
+              onTap: () { /* Image picking logic would go here */ },
               child: Container(
                 height: 200, width: double.infinity,
                 decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(12)),
@@ -110,7 +118,8 @@ class _AddUpdatePageState extends State<AddUpdatePage> {
               const SizedBox(height: 12),
               OutlinedButton(
                 onPressed: () {
-                  // Dispatch the delete event
+                  // The ID is now a String, so we must also update the event.
+                  // We will fix the event in the next step.
                   context.read<ProductBloc>().add(DeleteProductEvent(widget.product!.id));
                   Navigator.popUntil(context, (route) => route.isFirst);
                 },
@@ -142,4 +151,12 @@ class _AddUpdatePageState extends State<AddUpdatePage> {
       ],
     );
   }
+}
+// INCORRECT
+class DeleteProductEvent extends ProductEvent {
+final String id; // <-- Expects an int
+const DeleteProductEvent(this.id);
+
+@override
+List<Object?> get props => [id];
 }

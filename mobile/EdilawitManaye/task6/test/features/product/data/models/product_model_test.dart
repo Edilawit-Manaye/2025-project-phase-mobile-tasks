@@ -5,10 +5,10 @@ import 'package:task6/features/product/domain/entities/product_entity.dart';
 
 void main() {
   final tProductModel = ProductModel(
-    id: 1,
-    title: 'Test Shoe',
+    id: "1",
+    name: 'Test Shoe',
     description: 'A test description.',
-    imagePath: 'images/test.jpg',
+    imageUrl: 'images/test.jpg',
     category: 'Test Category',
     price: 99.99,
     rating: 4.5,
@@ -58,3 +58,4 @@ void main() {
     );
   });
 }
+

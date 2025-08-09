@@ -11,7 +11,7 @@ class SearchPage extends StatefulWidget {
 class _SearchPageState extends State<SearchPage> {
   RangeValues _currentRangeValues = const RangeValues(40, 150);
 
-  final sampleProduct = ProductEntity(id: 1, imagePath: 'images/bestShoes.jpg', title: 'Derby Leather Shoes', category: 'Men\'s shoe', price: 120, rating: 4.0, description: "A derby leather shoe is a classic...");
+  final sampleProduct = ProductEntity(id: '1', imageUrl: 'images/bestShoes.jpg', name: 'Derby Leather Shoes', category: 'Men\'s shoe', price: 120, rating: 4.0, description: "A derby leather shoe is a classic...");
 
   @override
   Widget build(BuildContext context) {

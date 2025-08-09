@@ -14,7 +14,7 @@ class LoadAllProductEvent extends ProductEvent {}
 
 // Event to get a single product by its ID
 class GetSingleProductEvent extends ProductEvent {
-  final int id;
+  final String id;
   const GetSingleProductEvent(this.id);
 
   @override
@@ -41,7 +41,7 @@ class UpdateProductEvent extends ProductEvent {
 
 // Event to delete a product by its ID
 class DeleteProductEvent extends ProductEvent {
-  final int id;
+  final String id; // <-- Now correctly expects a String
   const DeleteProductEvent(this.id);
 
   @override

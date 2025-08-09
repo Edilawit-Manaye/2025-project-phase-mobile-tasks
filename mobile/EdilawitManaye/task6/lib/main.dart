@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'features/auth/presentation/bloc/auth_bloc.dart';
+import 'features/auth/presentation/pages/login_page.dart';
+import 'features/auth/presentation/pages/signup_page.dart';
+import 'features/auth/presentation/pages/splash_page.dart';
 import 'features/product/domain/entities/product_entity.dart';
 import 'features/product/presentation/bloc/product_bloc.dart';
 import 'features/product/presentation/pages/add_update_page.dart';
@@ -10,12 +14,14 @@ import 'service_locator.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  setupLocator(); // Set up our dependencies for task 18
-
+  setupLocator(); // Set up all dependencies
   runApp(
-    // Provide the ProductBloc to the entire widget tree, enabling state management across the app.
-    BlocProvider(
-      create: (context) => sl<ProductBloc>(),
+    // Use MultiBlocProvider to provide both BLoCs to the widget tree
+    MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (context) => sl<AuthBloc>()),
+        BlocProvider(create: (context) => sl<ProductBloc>()),
+      ],
       child: const MyApp(),
     ),
   );
@@ -23,27 +29,33 @@ void main() {
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter E-commerce BLoC App',
-      initialRoute: '/', // Define the initial route of the app
+      debugShowCheckedModeBanner: false,
+      // The app now starts at the splash screen to check auth status
+      initialRoute: '/splash',
       onGenerateRoute: (settings) {
-        // Handle route generation based on settings
         switch (settings.name) {
+          case '/splash':
+            return MaterialPageRoute(builder: (_) => const SplashPage());
+          case '/login':
+            return MaterialPageRoute(builder: (_) => const LoginPage());
+          case '/signup':
+            return MaterialPageRoute(builder: (_) => const SignUpPage());
           case '/':
-            return MaterialPageRoute(builder: (_) => const HomePage()); // Home page
+            return MaterialPageRoute(builder: (_) => const HomePage());
           case '/detail':
-            final product = settings.arguments as ProductEntity; // Pass product details
+            final product = settings.arguments as ProductEntity;
             return MaterialPageRoute(builder: (_) => DetailPage(product: product));
           case '/add-update':
-            final product = settings.arguments as ProductEntity?; // Optional product for editing
+            final product = settings.arguments as ProductEntity?;
             return MaterialPageRoute(builder: (_) => AddUpdatePage(product: product));
           case '/search':
-            return MaterialPageRoute(builder: (_) => const SearchPage()); // Search page
+            return MaterialPageRoute(builder: (_) => const SearchPage());
           default:
-            return MaterialPageRoute(builder: (_) => const HomePage()); // Default to home page
+            return MaterialPageRoute(builder: (_) => const SplashPage());
         }
       },
     );

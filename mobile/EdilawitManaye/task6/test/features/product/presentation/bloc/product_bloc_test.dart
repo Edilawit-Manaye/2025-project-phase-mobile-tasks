@@ -36,7 +36,7 @@ void main() {
     );
   });
 
-  const tProduct = ProductEntity(id: 1, title: 'Test', description: '', imagePath: '', category: '', price: 10, rating: 5);
+  const tProduct = ProductEntity(id: '1', name: 'Test', description: '', imageUrl: '', category: '', price: 10, rating: 5);
   final tProductList = [tProduct];
 
   test('initial state should be InitialState', () {

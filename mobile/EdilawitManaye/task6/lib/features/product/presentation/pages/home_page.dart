@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../auth/presentation/bloc/auth_event.dart';
+import '../../../auth/presentation/bloc/auth_state.dart';
 import '../../domain/entities/product_entity.dart';
 import '../bloc/product_bloc.dart';
 import '../bloc/product_event.dart';
@@ -15,7 +18,7 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    // Dispatch the initial event to load all products when the page is first built.
+    // This correctly attempts to load products when the page is first shown.
     context.read<ProductBloc>().add(LoadAllProductEvent());
   }
 
@@ -24,12 +27,9 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       body: SafeArea(
-        // BlocListener handles one-time actions like showing SnackBars or navigating
-        // in response to a state change, without rebuilding the UI.
-        child: BlocListener<ProductBloc, ProductState>(
+        child: BlocConsumer<ProductBloc, ProductState>(
           listener: (context, state) {
-            // If any operation (Create, Update, Delete) was successful,
-            // we dispatch a new event to reload the product list.
+            // This listener will handle showing success/error messages for product operations.
             if (state is OperationSuccessState) {
               context.read<ProductBloc>().add(LoadAllProductEvent());
               ScaffoldMessenger.of(context).showSnackBar(
@@ -41,40 +41,46 @@ class _HomePageState extends State<HomePage> {
               );
             }
           },
-          // BlocBuilder rebuilds the UI whenever a new state is emitted.
-          child: BlocBuilder<ProductBloc, ProductState>(
-            builder: (context, state) {
-              if (state is LoadingState) {
-                return const Center(child: CircularProgressIndicator());
-
-              }
-              if (state is LoadedAllProductState) {
-                if (state.products.isEmpty) {
-                  return const Center(child: Text('No products found. Add one!'));
-                }
-                return ListView.builder(
-                  padding: const EdgeInsets.all(16.0),
-                  itemCount: state.products.length + 2,
-                  itemBuilder: (context, index) {
-                    if (index == 0) return _buildHeader();
-                    if (index == 1) return _buildTitleBar();
-                    final product = state.products[index - 2];
-                    return Padding(
-                      padding: const EdgeInsets.only(top: 16.0),
-                      child: GestureDetector(
-                        onTap: () {
-                          Navigator.pushNamed(context, '/detail', arguments: product);
-                        },
-                        child: ProductCard(product: product),
-                      ),
-                    );
-                  },
+          builder: (context, state) {
+            // This builder handles what the user sees.
+            if (state is LoadingState) {
+              // This is the infinite spinner you are seeing, because the API is broken.
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (state is LoadedAllProductState) {
+              if (state.products.isEmpty) {
+                return Column(
+                  children: [
+                    _buildHeader(context),
+                    _buildTitleBar(context),
+                    const Expanded(
+                      child: Center(child: Text('No products found. Add one!')),
+                    )
+                  ],
                 );
               }
-              // This covers the InitialState and any other unhandled states.
-              return const Center(child: Text('Welcome!'));
-            },
-          ),
+              return ListView.builder(
+                padding: const EdgeInsets.all(16.0),
+                itemCount: state.products.length + 2,
+                itemBuilder: (context, index) {
+                  if (index == 0) return _buildHeader(context);
+                  if (index == 1) return _buildTitleBar(context);
+                  final product = state.products[index - 2];
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 16.0),
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.pushNamed(context, '/detail', arguments: product);
+                      },
+                      child: ProductCard(product: product),
+                    ),
+                  );
+                },
+              );
+            }
+            // This is the default state while waiting for the first load event.
+            return const Center(child: CircularProgressIndicator());
+          },
         ),
       ),
       floatingActionButton: FloatingActionButton(
@@ -88,7 +94,8 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildHeader() {
+  // Helper methods now take `context` so they can dispatch events.
+  Widget _buildHeader(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 24.0),
       child: Row(
@@ -111,16 +118,27 @@ class _HomePageState extends State<HomePage> {
             ],
           ),
           const Spacer(),
+          // ==========================================================
+          // === THIS IS THE CORRECT, WORKING LOGOUT BUTTON           ===
+          // ==========================================================
           Container(
             decoration: BoxDecoration(border: Border.all(color: Colors.grey[300]!), borderRadius: BorderRadius.circular(12)),
-            child: IconButton(icon: const Icon(Icons.notifications_none_outlined, color: Colors.black54), onPressed: () {}),
+            child: IconButton(
+              icon: const Icon(Icons.logout, color: Colors.red),
+              onPressed: () {
+                // Tell the AuthBloc that the user wants to log out.
+                context.read<AuthBloc>().add(LogoutButtonPressed());
+                // Navigate back to the start and remove all previous pages.
+                Navigator.of(context).pushNamedAndRemoveUntil('/splash', (route) => false);
+              },
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildTitleBar() {
+  Widget _buildTitleBar(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -139,6 +157,9 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
+// ProductCard class with Image.network and error handling
+// ... inside home_page.dart ...
+
 class ProductCard extends StatelessWidget {
   final ProductEntity product;
   const ProductCard({super.key, required this.product});
@@ -154,7 +175,20 @@ class ProductCard extends StatelessWidget {
         children: [
           ClipRRect(
             borderRadius: const BorderRadius.only(topLeft: Radius.circular(12), topRight: Radius.circular(12)),
-            child: Image.asset(product.imagePath, fit: BoxFit.cover, width: double.infinity, height: 180),
+            // Use Image.network because the API provides a full URL
+            child: Image.network(
+              product.imageUrl, // CORRECTED to use 'imageUrl'
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: 180,
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return const SizedBox(height: 180, child: Center(child: CircularProgressIndicator()));
+              },
+              errorBuilder: (context, error, stackTrace) {
+                return const SizedBox(height: 180, child: Icon(Icons.broken_image, size: 50, color: Colors.grey));
+              },
+            ),
           ),
           Padding(
             padding: const EdgeInsets.all(12.0),
@@ -163,7 +197,8 @@ class ProductCard extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(product.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                    // CORRECTED to use 'name'
+                    Text(product.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
                     Text('\$${product.price.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
                   ],
                 ),
@@ -171,14 +206,17 @@ class ProductCard extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(product.category, style: const TextStyle(color: Colors.grey, fontSize: 14)),
-                    Row(
-                      children: [
-                        const Icon(Icons.star, color: Colors.amber, size: 18),
-                        const SizedBox(width: 4),
-                        Text('(${product.rating})', style: const TextStyle(color: Colors.grey, fontSize: 14)),
-                      ],
-                    ),
+                    // Handle the case where category might be null
+                    Text(product.category ?? 'No Category', style: const TextStyle(color: Colors.grey, fontSize: 14)),
+                    // Handle the case where rating might be null
+                    if (product.rating != null)
+                      Row(
+                        children: [
+                          const Icon(Icons.star, color: Colors.amber, size: 18),
+                          const SizedBox(width: 4),
+                          Text('(${product.rating})', style: const TextStyle(color: Colors.grey, fontSize: 14)),
+                        ],
+                      ),
                   ],
                 ),
               ],

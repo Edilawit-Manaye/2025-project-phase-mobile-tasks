@@ -1,26 +1,34 @@
 import 'dart:convert';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
+import '../../../../core/constants/strings.dart';
 import '../../../../core/error/exceptions.dart';
 import '../models/product_model.dart';
 import 'product_remote_data_source.dart';
 
-// This is the REAL implementation that talks to the internet API.
 class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
   final http.Client client;
-  final String _baseUrl = 'https://g5-flutter-learning-path-be.onrender.com/api/v1';
+  final FlutterSecureStorage secureStorage;
+  final String _baseUrl = 'https://g5-flutter-learning-path-be-tvum.onrender.com/api/v1';
 
-  ProductRemoteDataSourceImpl({required this.client});
+  ProductRemoteDataSourceImpl({required this.client, required this.secureStorage});
+
+  Future<Map<String, String>> _getHeaders() async {
+    final token = await secureStorage.read(key: SECURE_STORAGE_TOKEN_KEY);
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    };
+  }
 
   @override
   Future<List<ProductModel>> getProducts() async {
     final response = await client.get(
       Uri.parse('$_baseUrl/products'),
-      headers: {'Content-Type': 'application/json'},
+      headers: await _getHeaders(),
     );
-
     if (response.statusCode == 200) {
       final responseBody = json.decode(response.body);
-      // The API wraps the list in a 'data' key.
       final List<dynamic> jsonList = responseBody['data'];
       return jsonList.map((json) => ProductModel.fromJson(json)).toList();
     } else {
@@ -29,12 +37,11 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
   }
 
   @override
-  Future<ProductModel> getProductById(int id) async {
+  Future<ProductModel> getProductById(String id) async {
     final response = await client.get(
       Uri.parse('$_baseUrl/products/$id'),
-      headers: {'Content-Type': 'application/json'},
+      headers: await _getHeaders(),
     );
-
     if (response.statusCode == 200) {
       return ProductModel.fromJson(json.decode(response.body)['data']);
     } else {
@@ -46,12 +53,11 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
   Future<void> createProduct(ProductModel product) async {
     final response = await client.post(
       Uri.parse('$_baseUrl/products'),
-      headers: {'Content-Type': 'application/json'},
-      // We send the product data as a JSON string in the body.
-      body: json.encode(product.toJson()),
+      headers: await _getHeaders(),
+      // THIS IS THE CORRECTED PART:
+      // We now call toJson and tell it to exclude the ID for the create operation.
+      body: json.encode(product.toJson(excludeId: true)),
     );
-
-    // A successful creation returns a 201 status code.
     if (response.statusCode != 201) {
       throw ServerException();
     }
@@ -61,23 +67,21 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
   Future<void> updateProduct(ProductModel product) async {
     final response = await client.put(
       Uri.parse('$_baseUrl/products/${product.id}'),
-      headers: {'Content-Type': 'application/json'},
+      headers: await _getHeaders(),
+      // For update, we do NOT exclude the id.
       body: json.encode(product.toJson()),
     );
-
     if (response.statusCode != 200) {
       throw ServerException();
     }
   }
 
   @override
-  Future<void> deleteProduct(int id) async {
+  Future<void> deleteProduct(String id) async {
     final response = await client.delete(
       Uri.parse('$_baseUrl/products/$id'),
-      headers: {'Content-Type': 'application/json'},
+      headers: await _getHeaders(),
     );
-
-    // A successful deletion often returns a 204 (No Content) status code.
     if (response.statusCode != 204 && response.statusCode != 200) {
       throw ServerException();
     }

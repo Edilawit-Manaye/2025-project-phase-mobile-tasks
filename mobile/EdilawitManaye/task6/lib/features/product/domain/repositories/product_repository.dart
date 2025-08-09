@@ -7,10 +7,10 @@ abstract class ProductRepository {
   Future<(Failure?, List<ProductEntity>)> getProducts();
 
   // This will return EITHER a Failure OR a single ProductEntity.
-  Future<(Failure?, ProductEntity?)> getProductById(int id);
+  Future<(Failure?, ProductEntity?)> getProductById(String id);
 
   // These will return EITHER a Failure OR nothing (void).
   Future<(Failure?, void)> createProduct(ProductEntity product);
   Future<(Failure?, void)> updateProduct(ProductEntity product);
-  Future<(Failure?, void)> deleteProduct(int id);
+  Future<(Failure?, void)> deleteProduct(String id);
 }

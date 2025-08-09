@@ -25,9 +25,9 @@ class MockProductRemoteDataSource implements ProductRemoteDataSource {
   @override
   Future<void> createProduct(ProductModel product) async {}
   @override
-  Future<void> deleteProduct(int id) async {}
+  Future<void> deleteProduct(String id) async {}
   @override
-  Future<ProductModel> getProductById(int id) async => throw UnimplementedError();
+  Future<ProductModel> getProductById(Stringid) async => throw UnimplementedError();
   @override
   Future<void> updateProduct(ProductModel product) async {}
 }

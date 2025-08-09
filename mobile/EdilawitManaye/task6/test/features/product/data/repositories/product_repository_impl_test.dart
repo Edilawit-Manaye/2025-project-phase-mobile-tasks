@@ -22,7 +22,7 @@ void main() {
 
   group('getProducts', () {
     final tProductModelList = [
-      ProductModel(id: 1, title: 'Test Product 1', description: 'Desc 1', imagePath: '', category: '', price: 10, rating: 4),
+      ProductModel(id: "1", name: 'Test Product 1', description: 'Desc 1', imageUrl: '', category: '', price: 10, rating: 4),
     ];
 
     test(

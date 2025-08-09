@@ -7,9 +7,9 @@ class ProductMapper {
   static ProductEntity toEntity(ProductModel model) {
     return ProductEntity(
       id: model.id,
-      title: model.title,
+      name: model.name,
       description: model.description,
-      imagePath: model.imagePath,
+      imageUrl: model.imageUrl,
       category: model.category,
       price: model.price,
       rating: model.rating,
@@ -20,9 +20,9 @@ class ProductMapper {
   static ProductModel fromEntity(ProductEntity entity) {
     return ProductModel(
       id: entity.id,
-      title: entity.title,
+      name: entity.name,
       description: entity.description,
-      imagePath: entity.imagePath,
+      imageUrl: entity.imageUrl,
       category: entity.category,
       price: entity.price,
       rating: entity.rating,

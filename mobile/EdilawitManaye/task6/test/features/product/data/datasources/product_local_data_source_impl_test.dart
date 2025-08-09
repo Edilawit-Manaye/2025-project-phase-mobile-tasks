@@ -15,7 +15,7 @@ void main() {
   });
 
   final tProductModelList = [
-    ProductModel(id: 1, title: 'Test Product', description: 'desc', imagePath: 'path', category: 'cat', price: 1.0, rating: 1.0),
+    ProductModel(id: "1", name: 'Test Product', description: 'desc', imageUrl: 'path', category: 'cat', price: 1.0, rating: 1.0),
   ];
   final tProductListJson = json.encode(tProductModelList.map((p) => p.toJson()).toList());
 

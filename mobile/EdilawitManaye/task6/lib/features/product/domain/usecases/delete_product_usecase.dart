@@ -4,7 +4,7 @@ import '../repositories/product_repository.dart';
 
 // Note: We create a specific Params class for this use case as well.
 class DeleteProductParams {
-  final int id;
+  final String id;
   DeleteProductParams(this.id);
 }
 
