@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import '../../domain/entities/user_entity.dart'; // Add this import
 
 abstract class AuthState extends Equatable {
   const AuthState();
@@ -14,7 +15,16 @@ class AuthInitial extends AuthState {}
 class AuthLoading extends AuthState {}
 
 // The state when the user is successfully logged in
-class Authenticated extends AuthState {}
+// CORRECT
+
+
+class Authenticated extends AuthState {
+  final UserEntity user;
+  const Authenticated(this.user);
+
+  @override
+  List<Object> get props => [user];
+}
 
 // The state when the user is not logged in
 class Unauthenticated extends AuthState {}

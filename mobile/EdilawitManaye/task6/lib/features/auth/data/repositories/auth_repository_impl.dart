@@ -32,6 +32,22 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<(Failure?, UserEntity?)> getMe() async {
+    if (await networkInfo.isConnected) {
+      try {
+        final user = await dataSource.getMe();
+        return (null, user);
+      } on ServerException {
+        return (ServerFailure(), null);
+      }
+    } else {
+      return (ServerFailure(), null); // Or NetworkFailure
+    }
+  }
+// ... other methods
+
+
+  @override
   Future<(Failure?, UserEntity?)> signup(SignupParams params) async {
     if (await networkInfo.isConnected) {
       try {

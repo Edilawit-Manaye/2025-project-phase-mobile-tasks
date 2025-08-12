@@ -7,6 +7,11 @@ import '../../domain/entities/product_entity.dart';
 import '../bloc/product_bloc.dart';
 import '../bloc/product_event.dart';
 import '../bloc/product_state.dart';
+import '../../../../core/usecases/usecase.dart'; // Import for NoParams
+import '../../../chat/presentation/bloc/chat_bloc.dart';
+import '../../../chat/presentation/bloc/chat_event.dart';
+import '../../../chat/presentation/bloc/chat_bloc.dart';
+import '../../../chat/presentation/bloc/chat_event.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -18,8 +23,10 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    // This correctly attempts to load products when the page is first shown.
-    context.read<ProductBloc>().add(LoadAllProductEvent());
+    // Check initial auth state and load products if already authenticated
+    if (context.read<AuthBloc>().state is Authenticated) {
+      context.read<ProductBloc>().add(LoadAllProductEvent());
+    }
   }
 
   @override
@@ -27,60 +34,63 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       body: SafeArea(
-        child: BlocConsumer<ProductBloc, ProductState>(
-          listener: (context, state) {
-            // This listener will handle showing success/error messages for product operations.
-            if (state is OperationSuccessState) {
-              context.read<ProductBloc>().add(LoadAllProductEvent());
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(state.message), backgroundColor: Colors.green),
-              );
-            } else if (state is ErrorState) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(state.message), backgroundColor: Colors.red),
-              );
-            }
-          },
-          builder: (context, state) {
-            // This builder handles what the user sees.
-            if (state is LoadingState) {
-              // This is the infinite spinner you are seeing, because the API is broken.
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (state is LoadedAllProductState) {
-              if (state.products.isEmpty) {
-                return Column(
-                  children: [
-                    _buildHeader(context),
-                    _buildTitleBar(context),
-                    const Expanded(
-                      child: Center(child: Text('No products found. Add one!')),
-                    )
-                  ],
+        child: MultiBlocListener(
+          listeners: [
+            // Listens for Auth changes to trigger product loading
+            BlocListener<AuthBloc, AuthState>(
+              listener: (context, state) {
+                if (state is Authenticated) {
+                  context.read<ProductBloc>().add(LoadAllProductEvent());
+                }
+              },
+            ),
+            // Listens for Product changes to show SnackBars and reload
+            BlocListener<ProductBloc, ProductState>(
+              listener: (context, state) {
+                if (state is OperationSuccessState) {
+                  context.read<ProductBloc>().add(LoadAllProductEvent());
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(state.message), backgroundColor: Colors.green),
+                  );
+                } else if (state is ErrorState) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(state.message), backgroundColor: Colors.red),
+                  );
+                }
+              },
+            ),
+          ],
+          child: BlocBuilder<ProductBloc, ProductState>(
+            builder: (context, state) {
+              if (state is LoadingState) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (state is LoadedAllProductState) {
+                if (state.products.isEmpty) {
+                  return Column(children: [_buildHeader(context), _buildTitleBar(context), const Expanded(child: Center(child: Text('No products found. Add one!')))],);
+                }
+                return ListView.builder(
+                  padding: const EdgeInsets.all(16.0),
+                  itemCount: state.products.length + 2,
+                  itemBuilder: (context, index) {
+                    if (index == 0) return _buildHeader(context);
+                    if (index == 1) return _buildTitleBar(context);
+                    final product = state.products[index - 2];
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 16.0),
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.pushNamed(context, '/detail', arguments: product);
+                        },
+                        child: ProductCard(product: product),
+                      ),
+                    );
+                  },
                 );
               }
-              return ListView.builder(
-                padding: const EdgeInsets.all(16.0),
-                itemCount: state.products.length + 2,
-                itemBuilder: (context, index) {
-                  if (index == 0) return _buildHeader(context);
-                  if (index == 1) return _buildTitleBar(context);
-                  final product = state.products[index - 2];
-                  return Padding(
-                    padding: const EdgeInsets.only(top: 16.0),
-                    child: GestureDetector(
-                      onTap: () {
-                        Navigator.pushNamed(context, '/detail', arguments: product);
-                      },
-                      child: ProductCard(product: product),
-                    ),
-                  );
-                },
-              );
-            }
-            // This is the default state while waiting for the first load event.
-            return const Center(child: CircularProgressIndicator());
-          },
+              return const Center(child: CircularProgressIndicator()); // Default loading state
+            },
+          ),
         ),
       ),
       floatingActionButton: FloatingActionButton(
@@ -94,7 +104,114 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // Helper methods now take `context` so they can dispatch events.
+  // This is the complete and final helper method for your HomePage header.
+
+  // Widget _buildHeader(BuildContext context) {
+  //   return Padding(
+  //     padding: const EdgeInsets.only(bottom: 24.0),
+  //     child: Row(
+  //       children: [
+  //         // User Avatar Placeholder
+  //         Container(
+  //           width: 50,
+  //           height: 50,
+  //           decoration: BoxDecoration(
+  //             color: Colors.grey[200],
+  //             borderRadius: BorderRadius.circular(12),
+  //           ),
+  //         ),
+  //         const SizedBox(width: 12),
+  //
+  //         // User Greeting Text
+  //         Column(
+  //           crossAxisAlignment: CrossAxisAlignment.start,
+  //           children: [
+  //             const Text('July 14, 2023', style: TextStyle(color: Colors.grey, fontSize: 12)),
+  //             RichText(
+  //               text: const TextSpan(
+  //                 style: TextStyle(fontSize: 18, color: Colors.black),
+  //                 children: [
+  //                   TextSpan(text: 'Hello, '),
+  //                   TextSpan(text: 'Yohannes', style: TextStyle(fontWeight: FontWeight.bold)),
+  //                 ],
+  //               ),
+  //             )
+  //           ],
+  //         ),
+  //
+  //         // Spacer to push all buttons to the right
+  //         const Spacer(),
+  //
+  //         // --- THIS IS THE CORRECTED PART WITH ALL THREE BUTTONS ---
+  //
+  //         // 1. The "New Chat / Find User" Button (Temporary)
+  //         Container(
+  //           decoration: BoxDecoration(
+  //             border: Border.all(color: Colors.grey[300]!),
+  //             borderRadius: BorderRadius.circular(12),
+  //           ),
+  //           child: IconButton(
+  //             icon: const Icon(Icons.person_add_alt_1, color: Colors.blueAccent),
+  //             // In _buildHeader in HomePage
+  //             onPressed: () async { // <-- Make it async
+  //               const otherUserId = "ID_OF_THE_OTHER_USER";
+  //
+  //               // Dispatch the event
+  //               context.read<ChatBloc>().add(CreateChatEvent(userId: otherUserId));
+  //
+  //               // Give a feedback SnackBar
+  //               ScaffoldMessenger.of(context).showSnackBar(
+  //                 const SnackBar(content: Text('Starting new chat...')),
+  //               );
+  //
+  //               // IMPORTANT: Wait a moment for the server to process, then go to the chat list
+  //               await Future.delayed(const Duration(seconds: 2));
+  //               Navigator.pushNamed(context, '/chat-list');
+  //             },
+  //           ),
+  //         ),
+  //         const SizedBox(width: 8),
+  //
+  //         // 2. The Chat List Button
+  //         Container(
+  //           decoration: BoxDecoration(
+  //             border: Border.all(color: Colors.grey[300]!),
+  //             borderRadius: BorderRadius.circular(12),
+  //           ),
+  //           child: IconButton(
+  //             icon: const Icon(Icons.chat_bubble_outline, color: Colors.black54),
+  //             onPressed: () {
+  //               Navigator.pushNamed(context, '/chat-list');
+  //             },
+  //           ),
+  //         ),
+  //         const SizedBox(width: 8),
+  //
+  //         // 3. The Logout Button
+  //         Container(
+  //           decoration: BoxDecoration(
+  //             border: Border.all(color: Colors.grey[300]!),
+  //             borderRadius: BorderRadius.circular(12),
+  //           ),
+  //           child: IconButton(
+  //             icon: const Icon(Icons.logout, color: Colors.red),
+  //             onPressed: () {
+  //               context.read<AuthBloc>().add(LogoutButtonPressed());
+  //               Navigator.of(context).pushNamedAndRemoveUntil('/splash', (route) => false);
+  //             },
+  //           ),
+  //         ),
+  //         // --- END OF CORRECTED PART ---
+  //       ],
+  //     ),
+  //   );
+  // }
+
+  // You will need to add these two imports at the top of your home_page.dart
+
+
+// ... inside the _HomePageState class ...
+
   Widget _buildHeader(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 24.0),
@@ -118,17 +235,50 @@ class _HomePageState extends State<HomePage> {
             ],
           ),
           const Spacer(),
-          // ==========================================================
-          // === THIS IS THE CORRECT, WORKING LOGOUT BUTTON           ===
-          // ==========================================================
+
+          // --- THIS IS THE FINAL BUTTON SETUP FOR YOUR DEMO ---
+
+          // 1. "New Chat" Shortcut Button
+          Container(
+            decoration: BoxDecoration(border: Border.all(color: Colors.grey[300]!), borderRadius: BorderRadius.circular(12)),
+            child: IconButton(
+              tooltip: 'Start Chat with a Specific User',
+              icon: const Icon(Icons.person_add, color: Colors.blueAccent),
+              onPressed: () {
+
+                const otherUserId = "68984ee1325fc48b07cf29a7";
+
+
+                context.read<ChatBloc>().add(CreateChatEvent(userId: otherUserId));
+
+                // Show feedback and tell the user what to do next
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Chat created! Go to the chat list to see it.')),
+                );
+              },
+            ),
+          ),
+          const SizedBox(width: 8),
+
+          // 2. The Chat List Button
+          Container(
+            decoration: BoxDecoration(border: Border.all(color: Colors.grey[300]!), borderRadius: BorderRadius.circular(12)),
+            child: IconButton(
+              icon: const Icon(Icons.chat_bubble_outline, color: Colors.black54),
+              onPressed: () {
+                Navigator.pushNamed(context, '/chat-list');
+              },
+            ),
+          ),
+          const SizedBox(width: 8),
+
+          // 3. The Logout Button
           Container(
             decoration: BoxDecoration(border: Border.all(color: Colors.grey[300]!), borderRadius: BorderRadius.circular(12)),
             child: IconButton(
               icon: const Icon(Icons.logout, color: Colors.red),
               onPressed: () {
-                // Tell the AuthBloc that the user wants to log out.
                 context.read<AuthBloc>().add(LogoutButtonPressed());
-                // Navigate back to the start and remove all previous pages.
                 Navigator.of(context).pushNamedAndRemoveUntil('/splash', (route) => false);
               },
             ),
@@ -137,6 +287,11 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
+
+
+
+
+
 
   Widget _buildTitleBar(BuildContext context) {
     return Row(
@@ -157,9 +312,6 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-// ProductCard class with Image.network and error handling
-// ... inside home_page.dart ...
-
 class ProductCard extends StatelessWidget {
   final ProductEntity product;
   const ProductCard({super.key, required this.product});
@@ -175,9 +327,8 @@ class ProductCard extends StatelessWidget {
         children: [
           ClipRRect(
             borderRadius: const BorderRadius.only(topLeft: Radius.circular(12), topRight: Radius.circular(12)),
-            // Use Image.network because the API provides a full URL
             child: Image.network(
-              product.imageUrl, // CORRECTED to use 'imageUrl'
+              product.imageUrl,
               fit: BoxFit.cover,
               width: double.infinity,
               height: 180,
@@ -197,7 +348,6 @@ class ProductCard extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // CORRECTED to use 'name'
                     Text(product.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
                     Text('\$${product.price.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
                   ],
@@ -206,9 +356,7 @@ class ProductCard extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // Handle the case where category might be null
-                    Text(product.category ?? 'No Category', style: const TextStyle(color: Colors.grey, fontSize: 14)),
-                    // Handle the case where rating might be null
+                    Text(product.category ?? 'General', style: const TextStyle(color: Colors.grey, fontSize: 14)),
                     if (product.rating != null)
                       Row(
                         children: [
