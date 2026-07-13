@@ -1,0 +1,14 @@
+# This file configures the static analysis tools for Dart.
+include: package:flutter_lints/flutter.yaml
+
+linter:
+  # These are the custom rules required by Task 8.
+  rules:
+    avoid_print: true
+    prefer_const_constructors: true
+    prefer_const_literals_to_create_immutables: true
+    avoid_unnecessary_containers: true
+    always_declare_return_types: true
+    prefer_single_quotes: true
+    directives_ordering: true
+    prefer_relative_imports: true

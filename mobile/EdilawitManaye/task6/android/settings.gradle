@@ -1,0 +1,53 @@
+//pluginManagement {
+//    def flutterSdkPath = {
+//        def properties = new Properties()
+//        file("local.properties").withInputStream { properties.load(it) }
+//        def flutterSdkPath = properties.getProperty("flutter.sdk")
+//        assert flutterSdkPath != null, "flutter.sdk not set in local.properties"
+//        return flutterSdkPath
+//    }()
+//
+//    includeBuild("$flutterSdkPath/packages/flutter_tools/gradle")
+//
+//    repositories {
+//        google()
+//        mavenCentral()
+//        gradlePluginPortal()
+//    }
+//}
+//
+//plugins {
+//    id "dev.flutter.flutter-plugin-loader" version "1.0.0"
+//    id "com.android.application" version "8.1.0" apply false
+//    id "org.jetbrains.kotlin.android" version "1.8.22" apply false
+//}
+//
+//include ":app"
+
+
+
+pluginManagement {
+    def flutterSdkPath = {
+        def propsFile = file("local.properties")
+        def props = propsFile.text // Read the file content
+        def sdkPath = props.split("\n").find { it.startsWith("flutter.sdk=") }?.split("=")?.last()
+        assert sdkPath != null : "flutter.sdk not set in local.properties"
+        return sdkPath
+    }()
+
+    includeBuild("$flutterSdkPath/packages/flutter_tools/gradle")
+
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
+plugins {
+    id "dev.flutter.flutter-plugin-loader" version "1.0.0"
+    id "com.android.application" version "8.2.1" apply false // Update to at least 8.2.1
+    id "org.jetbrains.kotlin.android" version "1.8.22" apply false
+}
+
+include ":app"
