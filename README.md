@@ -1,6 +1,6 @@
 # E-commerce Mobile App (Clean Architecture)
 
-This project is a simple e-commerce mobile application built with Flutter. It is structured following the principles of **Clean Architecture** to ensure a clean separation of concerns, making the codebase scalable, maintainable, and highly testable.
+This project is an e-commerce mobile application built with Flutter. It is structured following the principles of **Clean Architecture** to ensure a clean separation of concerns, making the codebase scalable, maintainable, and highly testable.
 
 The application allows users to perform full CRUD (Create, Read, Update, Delete) operations on a list of products.
 
